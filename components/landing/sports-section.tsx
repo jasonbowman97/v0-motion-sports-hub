@@ -1,10 +1,12 @@
 import { Activity, Crosshair, Flame } from "lucide-react"
+import Link from "next/link"
 
 const sports = [
   {
     name: "MLB",
     label: "Baseball",
     icon: Activity,
+    href: "/dashboard",
     description:
       "Pitcher vs. batter matchups, pitch arsenal breakdowns, exit velocity trends, barrel rates, and spray charts. Filter by handedness, pitch type, and time range.",
     stats: ["Pitch Arsenal Analysis", "Batter vs. Pitcher Matchups", "Exit Velo & Barrel Rate", "Platoon Splits"],
@@ -14,19 +16,22 @@ const sports = [
     name: "NBA",
     label: "Basketball",
     icon: Crosshair,
+    href: "/nba/first-basket",
     description:
-      "Shot distribution heat maps, player efficiency by quarter, clutch scoring, assist networks, and defensive matchup tendencies across every lineup.",
-    stats: ["Shot Zone Efficiency", "Lineup +/- Trends", "Clutch Performance", "Defensive Matchups"],
+      "First basket analysis, tip-off win tracking, shot attempt rates, and team scoring patterns. Filter by matchup, time frame, and game slate.",
+    stats: ["First Basket Tracking", "Tip-Off Win Rates", "1st Shot Attempt %", "Team Scoring Patterns"],
     accentClass: "text-accent bg-accent/10",
   },
   {
     name: "NFL",
     label: "Football",
     icon: Flame,
+    href: "#",
     description:
       "Rushing vs. passing breakdowns, red zone efficiency, target share progressions, quarterback pocket time, and formation-based play tendencies.",
     stats: ["Target Share Analysis", "Red Zone Efficiency", "Formation Breakdowns", "QB Under Pressure"],
     accentClass: "text-primary bg-primary/10",
+    comingSoon: true,
   },
 ]
 
@@ -48,38 +53,60 @@ export function SportsSection() {
         </div>
 
         <div className="grid gap-6 md:grid-cols-3">
-          {sports.map((sport) => (
-            <div
-              key={sport.name}
-              className="group relative flex flex-col rounded-xl border border-border bg-card p-8 transition-colors hover:border-primary/30"
-            >
-              <div className="flex items-center gap-3 mb-6">
-                <div className={`flex h-10 w-10 items-center justify-center rounded-lg ${sport.accentClass}`}>
-                  <sport.icon className="h-5 w-5" />
-                </div>
-                <div>
-                  <h3 className="text-xl font-bold text-foreground">{sport.name}</h3>
-                  <p className="text-xs text-muted-foreground">{sport.label}</p>
-                </div>
-              </div>
-
-              <p className="text-sm leading-relaxed text-muted-foreground mb-6">
-                {sport.description}
-              </p>
-
-              <div className="mt-auto flex flex-col gap-2">
-                {sport.stats.map((stat) => (
-                  <div
-                    key={stat}
-                    className="flex items-center gap-2 text-xs text-foreground/80"
-                  >
-                    <span className="h-1 w-1 rounded-full bg-primary shrink-0" />
-                    {stat}
+          {sports.map((sport) => {
+            const Wrapper = sport.comingSoon ? "div" : Link
+            const wrapperProps = sport.comingSoon ? {} : { href: sport.href }
+            return (
+              <Wrapper
+                key={sport.name}
+                {...(wrapperProps as Record<string, string>)}
+                className={`group relative flex flex-col rounded-xl border border-border bg-card p-8 transition-colors ${
+                  sport.comingSoon
+                    ? "opacity-60 cursor-not-allowed"
+                    : "hover:border-primary/30"
+                }`}
+              >
+                {sport.comingSoon && (
+                  <span className="absolute top-4 right-4 text-[10px] font-bold uppercase tracking-widest text-muted-foreground bg-secondary px-2.5 py-1 rounded-md">
+                    Coming soon
+                  </span>
+                )}
+                <div className="flex items-center gap-3 mb-6">
+                  <div className={`flex h-10 w-10 items-center justify-center rounded-lg ${sport.accentClass}`}>
+                    <sport.icon className="h-5 w-5" />
                   </div>
-                ))}
-              </div>
-            </div>
-          ))}
+                  <div>
+                    <h3 className="text-xl font-bold text-foreground">{sport.name}</h3>
+                    <p className="text-xs text-muted-foreground">{sport.label}</p>
+                  </div>
+                </div>
+
+                <p className="text-sm leading-relaxed text-muted-foreground mb-6">
+                  {sport.description}
+                </p>
+
+                <div className="mt-auto flex flex-col gap-2">
+                  {sport.stats.map((stat) => (
+                    <div
+                      key={stat}
+                      className="flex items-center gap-2 text-xs text-foreground/80"
+                    >
+                      <span className="h-1 w-1 rounded-full bg-primary shrink-0" />
+                      {stat}
+                    </div>
+                  ))}
+                </div>
+
+                {!sport.comingSoon && (
+                  <div className="mt-6 pt-4 border-t border-border">
+                    <span className="text-xs font-semibold text-primary group-hover:underline">
+                      Explore dashboard
+                    </span>
+                  </div>
+                )}
+              </Wrapper>
+            )
+          })}
         </div>
       </div>
     </section>

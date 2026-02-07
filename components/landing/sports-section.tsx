@@ -9,7 +9,7 @@ const sports = [
     href: "/mlb/hitting-stats",
     description:
       "Pitcher vs. batter matchups, pitch arsenal breakdowns, exit velocity trends, barrel rates, and NRFI tracking. Filter by handedness, pitch type, and time range.",
-    stats: ["Pitching Stats & Arsenal", "Batter vs. Pitcher Matchups", "Exit Velo & Barrel Rate", "NRFI Tracking"],
+    stats: ["Pitching Stats & Arsenal", "Batter vs. Pitcher Matchups", "NRFI Tracking", "Hot & Cold Trends"],
     accentClass: "text-primary bg-primary/10",
   },
   {
@@ -19,7 +19,7 @@ const sports = [
     href: "/nba/first-basket",
     description:
       "First basket analysis, tip-off win tracking, team head-to-head breakdowns, defensive matchups, and injury reports. Filter by matchup, time frame, and game slate.",
-    stats: ["First Basket Tracking", "Head-to-Head Analysis", "Defense vs Position", "Injury Reports"],
+    stats: ["First Basket Tracking", "Head-to-Head Analysis", "Defense vs Position", "Hot & Cold Trends"],
     accentClass: "text-accent bg-accent/10",
   },
   {
@@ -29,7 +29,7 @@ const sports = [
     href: "/nfl/matchup",
     description:
       "Head-to-head matchup breakdowns, passing/rushing/receiving splits, team stat comparisons with league rankings, and recent game log trends.",
-    stats: ["Team Stat Comparisons", "Positional Breakdowns", "Game Log Trends", "League Rankings"],
+    stats: ["Team Stat Comparisons", "Positional Breakdowns", "League Rankings", "Hot & Cold Trends"],
     accentClass: "text-primary bg-primary/10",
   },
 ]

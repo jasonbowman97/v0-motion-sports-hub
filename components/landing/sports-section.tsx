@@ -9,7 +9,7 @@ const sports = [
     href: "/mlb/hitting-stats",
     description:
       "Pitcher vs. batter matchups, pitch arsenal breakdowns, exit velocity trends, barrel rates, and NRFI tracking. Filter by handedness, pitch type, and time range.",
-    stats: ["Pitch Arsenal Analysis", "Batter vs. Pitcher Matchups", "Exit Velo & Barrel Rate", "NRFI Tracking"],
+    stats: ["Pitching Stats & Arsenal", "Batter vs. Pitcher Matchups", "Exit Velo & Barrel Rate", "NRFI Tracking"],
     accentClass: "text-primary bg-primary/10",
   },
   {

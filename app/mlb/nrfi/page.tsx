@@ -63,6 +63,12 @@ export default function NrfiPage() {
             <span className="text-xs font-medium text-primary bg-primary/10 px-3 py-1.5 rounded-md">
               NRFI
             </span>
+            <Link
+              href="/mlb/pitching-stats"
+              className="text-xs font-medium text-muted-foreground hover:text-foreground transition-colors px-3 py-1.5 rounded-md hover:bg-secondary"
+            >
+              Pitching Stats
+            </Link>
             <div className="hidden sm:block h-5 w-px bg-border mx-1" />
             <Link
               href="/nba/first-basket"

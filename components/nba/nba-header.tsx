@@ -22,7 +22,7 @@ export function NBAHeader() {
         </div>
         <div className="flex items-center gap-3">
           <Link
-            href="/dashboard"
+            href="/mlb/hitting-stats"
             className="text-xs font-medium text-muted-foreground hover:text-foreground transition-colors px-3 py-1.5 rounded-md hover:bg-secondary"
           >
             MLB

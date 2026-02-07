@@ -109,7 +109,7 @@ export function PricingSection() {
                   size="lg"
                   asChild
                 >
-                  <Link href="/dashboard">{plan.cta}</Link>
+                  <Link href="/mlb/hitting-stats">{plan.cta}</Link>
                 </Button>
               </div>
             </div>

@@ -6,7 +6,7 @@ const sports = [
     name: "MLB",
     label: "Baseball",
     icon: Activity,
-    href: "/dashboard",
+    href: "/mlb/hitting-stats",
     description:
       "Pitcher vs. batter matchups, pitch arsenal breakdowns, exit velocity trends, barrel rates, and spray charts. Filter by handedness, pitch type, and time range.",
     stats: ["Pitch Arsenal Analysis", "Batter vs. Pitcher Matchups", "Exit Velo & Barrel Rate", "Platoon Splits"],

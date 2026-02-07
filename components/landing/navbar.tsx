@@ -31,7 +31,7 @@ export function Navbar() {
           <a href="#pricing" className="text-sm text-muted-foreground transition-colors hover:text-foreground">
             Pricing
           </a>
-          <Link href="/dashboard" className="text-sm text-muted-foreground transition-colors hover:text-foreground">
+          <Link href="/mlb/hitting-stats" className="text-sm text-muted-foreground transition-colors hover:text-foreground">
             MLB
           </Link>
           <Link href="/nba/first-basket" className="text-sm text-muted-foreground transition-colors hover:text-foreground">
@@ -44,10 +44,10 @@ export function Navbar() {
 
         <div className="hidden items-center gap-3 md:flex">
           <Button variant="ghost" size="sm" className="text-muted-foreground hover:text-foreground" asChild>
-            <Link href="/dashboard">Log in</Link>
+            <Link href="/mlb/hitting-stats">Log in</Link>
           </Button>
           <Button size="sm" className="bg-primary text-primary-foreground hover:bg-primary/90" asChild>
-            <Link href="/dashboard">Sign up free</Link>
+            <Link href="/mlb/hitting-stats">Sign up free</Link>
           </Button>
         </div>
 
@@ -68,15 +68,15 @@ export function Navbar() {
             <a href="#sports" onClick={() => setMobileOpen(false)} className="text-sm text-muted-foreground">Sports</a>
             <a href="#features" onClick={() => setMobileOpen(false)} className="text-sm text-muted-foreground">Features</a>
             <a href="#pricing" onClick={() => setMobileOpen(false)} className="text-sm text-muted-foreground">Pricing</a>
-            <Link href="/dashboard" onClick={() => setMobileOpen(false)} className="text-sm text-muted-foreground">MLB Dashboard</Link>
+            <Link href="/mlb/hitting-stats" onClick={() => setMobileOpen(false)} className="text-sm text-muted-foreground">MLB Dashboard</Link>
             <Link href="/nba/first-basket" onClick={() => setMobileOpen(false)} className="text-sm text-muted-foreground">NBA Dashboard</Link>
             <Link href="/nfl/matchup" onClick={() => setMobileOpen(false)} className="text-sm text-muted-foreground">NFL Dashboard</Link>
             <div className="flex flex-col gap-2 pt-2 border-t border-border">
               <Button variant="ghost" size="sm" className="justify-start text-muted-foreground" asChild>
-                <Link href="/dashboard">Log in</Link>
+                <Link href="/mlb/hitting-stats">Log in</Link>
               </Button>
               <Button size="sm" className="bg-primary text-primary-foreground" asChild>
-                <Link href="/dashboard">Sign up free</Link>
+                <Link href="/mlb/hitting-stats">Sign up free</Link>
               </Button>
             </div>
           </div>

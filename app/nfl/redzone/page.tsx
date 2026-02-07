@@ -5,7 +5,7 @@ import { RedzoneTable } from "@/components/nfl/redzone-table"
 export const metadata = {
   title: "Diamond Analytics - NFL Redzone Stats",
   description:
-    "NFL redzone target and efficiency data. Passing, rushing, and receiving breakdowns for redzone totals, inside the 10, and inside the 5.",
+    "NFL redzone target and efficiency data. Passing, rushing, and receiving breakdowns for redzone performance.",
 }
 
 export default function NFLRedzonePage() {
@@ -65,8 +65,7 @@ export default function NFLRedzonePage() {
             NFL Redzone Stats
           </h2>
           <p className="text-sm text-muted-foreground mt-1">
-            Passing, rushing, and receiving efficiency inside the red zone, the
-            10-yard line, and the 5-yard line. 2025-26 Regular Season.
+            Passing, rushing, and receiving efficiency inside the red zone. 2025-26 Regular Season.
           </p>
         </div>
 

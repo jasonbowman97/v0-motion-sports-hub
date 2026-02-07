@@ -17,7 +17,6 @@ type SortField =
   | "time"
   | "nrfiPct"
   | "streak"
-  | "hrsAllowed"
   | "opponentNrfiStreak"
   | "opponentNrfiRank"
 
@@ -122,9 +121,6 @@ export function NrfiTable({ data }: NrfiTableProps) {
                 <SortButton field="streak" label="Streak" activeField={sortField} activeDir={sortDir} onSort={handleSort} />
               </TableHead>
               <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground text-center">
-                <SortButton field="hrsAllowed" label="HRs" activeField={sortField} activeDir={sortDir} onSort={handleSort} />
-              </TableHead>
-              <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground text-center">
                 vs
               </TableHead>
               <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground text-center">
@@ -182,11 +178,6 @@ export function NrfiTable({ data }: NrfiTableProps) {
                 </TableCell>
                 <TableCell className="py-3 text-center">
                   <StreakBadge value={pitcher.streak} />
-                </TableCell>
-                <TableCell className="py-3 text-center">
-                  <span className="text-sm text-muted-foreground font-mono tabular-nums">
-                    {pitcher.hrsAllowed}
-                  </span>
                 </TableCell>
                 <TableCell className="py-3 text-center">
                   <span className="text-xs font-medium text-muted-foreground bg-secondary px-2 py-1 rounded-md">

@@ -163,36 +163,6 @@ export default function NrfiPage() {
           )}
         </div>
 
-        {/* Summary stats */}
-        <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
-          <div className="rounded-xl border border-border bg-card p-4">
-            <p className="text-xs text-muted-foreground mb-1">Games Today</p>
-            <p className="text-2xl font-bold text-foreground font-mono tabular-nums">
-              {Math.ceil(filteredData.length / 2)}
-            </p>
-          </div>
-          <div className="rounded-xl border border-border bg-card p-4">
-            <p className="text-xs text-muted-foreground mb-1">Probable Pitchers</p>
-            <p className="text-2xl font-bold text-foreground font-mono tabular-nums">
-              {filteredData.length}
-            </p>
-          </div>
-          <div className="rounded-xl border border-border bg-card p-4">
-            <p className="text-xs text-muted-foreground mb-1">{"Avg NRFI %"}</p>
-            <p className="text-2xl font-bold text-primary font-mono tabular-nums">
-              {filteredData.length > 0
-                ? (filteredData.reduce((s, p) => s + p.nrfiPct, 0) / filteredData.length).toFixed(1)
-                : 0}%
-            </p>
-          </div>
-          <div className="rounded-xl border border-border bg-card p-4">
-            <p className="text-xs text-muted-foreground mb-1">{"Best NRFI %"}</p>
-            <p className="text-2xl font-bold text-emerald-400 font-mono tabular-nums">
-              {filteredData.length > 0 ? Math.max(...filteredData.map((p) => p.nrfiPct)) : 0}%
-            </p>
-          </div>
-        </div>
-
         {/* Data table */}
         <NrfiTable data={filteredData} />
       </main>

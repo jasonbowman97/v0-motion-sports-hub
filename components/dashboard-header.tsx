@@ -45,8 +45,15 @@ export function DashboardHeader({ showBack, onBack, playerName }: DashboardHeade
         </div>
         <div className="flex items-center gap-3">
           <span className="text-xs font-medium text-primary bg-primary/10 px-3 py-1.5 rounded-md">
-            MLB
+            Hitting Stats
           </span>
+          <Link
+            href="/mlb/nrfi"
+            className="text-xs font-medium text-muted-foreground hover:text-foreground transition-colors px-3 py-1.5 rounded-md hover:bg-secondary"
+          >
+            NRFI
+          </Link>
+          <div className="hidden sm:block h-5 w-px bg-border mx-1" />
           <Link
             href="/nba/first-basket"
             className="text-xs font-medium text-muted-foreground hover:text-foreground transition-colors px-3 py-1.5 rounded-md hover:bg-secondary"
@@ -59,10 +66,6 @@ export function DashboardHeader({ showBack, onBack, playerName }: DashboardHeade
           >
             NFL
           </Link>
-          <div className="hidden sm:block h-5 w-px bg-border mx-1" />
-          <span className="text-xs font-medium text-muted-foreground bg-secondary px-2.5 py-1 rounded-md">
-            2024 Season
-          </span>
         </div>
       </div>
     </header>

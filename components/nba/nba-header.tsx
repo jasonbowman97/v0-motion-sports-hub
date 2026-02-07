@@ -30,9 +30,12 @@ export function NBAHeader() {
           <span className="text-xs font-medium text-primary bg-primary/10 px-3 py-1.5 rounded-md">
             NBA
           </span>
-          <span className="text-xs font-medium text-muted-foreground/50 px-3 py-1.5 rounded-md cursor-not-allowed">
+          <Link
+            href="/nfl/matchup"
+            className="text-xs font-medium text-muted-foreground hover:text-foreground transition-colors px-3 py-1.5 rounded-md hover:bg-secondary"
+          >
             NFL
-          </span>
+          </Link>
           <div className="hidden sm:block h-5 w-px bg-border mx-1" />
           <span className="text-xs font-medium text-muted-foreground bg-secondary px-2.5 py-1 rounded-md">
             2025-26 Season

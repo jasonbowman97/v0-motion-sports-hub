@@ -1,67 +1,44 @@
 "use client"
 
-import { BarChart3, ChevronLeft } from "lucide-react"
-import { Button } from "@/components/ui/button"
+import { BarChart3 } from "lucide-react"
 import Link from "next/link"
 
-interface DashboardHeaderProps {
-  showBack?: boolean
-  onBack?: () => void
-  playerName?: string
-}
-
-export function DashboardHeader({ showBack, onBack, playerName }: DashboardHeaderProps) {
+export function NFLHeader() {
   return (
     <header className="border-b border-border bg-card/50 backdrop-blur-sm sticky top-0 z-50">
       <div className="mx-auto max-w-[1440px] flex items-center justify-between px-6 py-4">
         <div className="flex items-center gap-3">
-          {showBack && (
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={onBack}
-              className="text-muted-foreground hover:text-foreground"
-            >
-              <ChevronLeft className="h-4 w-4 mr-1" />
-              Back
-            </Button>
-          )}
-          <div className="flex items-center gap-2.5">
+          <Link href="/" className="flex items-center gap-2.5">
             <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary/10">
               <BarChart3 className="h-5 w-5 text-primary" />
             </div>
             <div>
               <h1 className="text-lg font-semibold tracking-tight text-foreground">
-                {playerName ? playerName : "Diamond Analytics"}
+                Diamond Analytics
               </h1>
-              {!playerName && (
-                <p className="text-xs text-muted-foreground">Player Hitting Stats</p>
-              )}
-              {playerName && (
-                <p className="text-xs text-muted-foreground">Game Log & At-Bat Analysis</p>
-              )}
+              <p className="text-xs text-muted-foreground">NFL Matchup Center</p>
             </div>
-          </div>
+          </Link>
         </div>
         <div className="flex items-center gap-3">
-          <span className="text-xs font-medium text-primary bg-primary/10 px-3 py-1.5 rounded-md">
+          <Link
+            href="/dashboard"
+            className="text-xs font-medium text-muted-foreground hover:text-foreground transition-colors px-3 py-1.5 rounded-md hover:bg-secondary"
+          >
             MLB
-          </span>
+          </Link>
           <Link
             href="/nba/first-basket"
             className="text-xs font-medium text-muted-foreground hover:text-foreground transition-colors px-3 py-1.5 rounded-md hover:bg-secondary"
           >
             NBA
           </Link>
-          <Link
-            href="/nfl/matchup"
-            className="text-xs font-medium text-muted-foreground hover:text-foreground transition-colors px-3 py-1.5 rounded-md hover:bg-secondary"
-          >
+          <span className="text-xs font-medium text-primary bg-primary/10 px-3 py-1.5 rounded-md">
             NFL
-          </Link>
+          </span>
           <div className="hidden sm:block h-5 w-px bg-border mx-1" />
           <span className="text-xs font-medium text-muted-foreground bg-secondary px-2.5 py-1 rounded-md">
-            2024 Season
+            2025-26 Season
           </span>
         </div>
       </div>

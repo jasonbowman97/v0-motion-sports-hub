@@ -26,12 +26,11 @@ const sports = [
     name: "NFL",
     label: "Football",
     icon: Flame,
-    href: "#",
+    href: "/nfl/matchup",
     description:
-      "Rushing vs. passing breakdowns, red zone efficiency, target share progressions, quarterback pocket time, and formation-based play tendencies.",
-    stats: ["Target Share Analysis", "Red Zone Efficiency", "Formation Breakdowns", "QB Under Pressure"],
+      "Head-to-head matchup breakdowns, passing/rushing/receiving splits, team stat comparisons with league rankings, and recent game log trends.",
+    stats: ["Team Stat Comparisons", "Positional Breakdowns", "Game Log Trends", "League Rankings"],
     accentClass: "text-primary bg-primary/10",
-    comingSoon: true,
   },
 ]
 

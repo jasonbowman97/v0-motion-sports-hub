@@ -2,10 +2,12 @@
 
 import { useState, useMemo } from "react"
 import Link from "next/link"
-import { BarChart3, ChevronLeft, ChevronRight, Calendar } from "lucide-react"
+import useSWR from "swr"
+import { BarChart3, ChevronLeft, ChevronRight, Calendar, Loader2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { NrfiTable } from "@/components/mlb/nrfi-table"
 import { nrfiPitchers } from "@/lib/nrfi-data"
+import type { NrfiPitcher } from "@/lib/nrfi-data"
 import {
   Select,
   SelectContent,
@@ -14,6 +16,60 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 
+interface APIGame {
+  gamePk: number
+  gameDate: string
+  status: string
+  away: { id: number; name: string; abbreviation: string; probablePitcher: { id: number; fullName: string } | null }
+  home: { id: number; name: string; abbreviation: string; probablePitcher: { id: number; fullName: string } | null }
+  venue: string
+  weather: { condition: string; temp: string; wind: string } | null
+}
+
+function transformToNrfi(games: APIGame[]): NrfiPitcher[] {
+  const rows: NrfiPitcher[] = []
+  for (const g of games) {
+    const time = new Date(g.gameDate).toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit", hour12: true })
+    if (g.away.probablePitcher) {
+      rows.push({
+        id: `live-${g.away.probablePitcher.id}`,
+        time,
+        team: g.away.abbreviation,
+        player: g.away.probablePitcher.fullName,
+        hand: "R",
+        record: "--",
+        nrfiPct: 0,
+        streak: 0,
+        hrsAllowed: 0,
+        opponent: g.home.abbreviation,
+        opponentRecord: "--",
+        opponentNrfiStreak: 0,
+        opponentNrfiRank: 0,
+      })
+    }
+    if (g.home.probablePitcher) {
+      rows.push({
+        id: `live-${g.home.probablePitcher.id}`,
+        time,
+        team: g.home.abbreviation,
+        player: g.home.probablePitcher.fullName,
+        hand: "R",
+        record: "--",
+        nrfiPct: 0,
+        streak: 0,
+        hrsAllowed: 0,
+        opponent: g.away.abbreviation,
+        opponentRecord: "--",
+        opponentNrfiStreak: 0,
+        opponentNrfiRank: 0,
+      })
+    }
+  }
+  return rows
+}
+
+const fetcher = (url: string) => fetch(url).then((r) => r.json())
+
 type HandFilter = "All" | "RHP" | "LHP"
 
 export default function NrfiPage() {
@@ -21,8 +77,21 @@ export default function NrfiPage() {
   const [dateOffset, setDateOffset] = useState(0)
   const [yearFilter, setYearFilter] = useState("2025")
 
+  const { data, isLoading } = useSWR<{ games: APIGame[]; date: string }>("/api/mlb/schedule", fetcher, {
+    revalidateOnFocus: false,
+    dedupingInterval: 3600000,
+  })
+
+  const isToday = dateOffset === 0
+  const liveGames = data?.games ?? []
+  const liveNrfi = useMemo(() => (liveGames.length > 0 ? transformToNrfi(liveGames) : []), [liveGames])
+  const isLive = isToday && liveNrfi.length > 0
+
+  // Use live probable pitchers for today, static for other dates
+  const basePitchers = isLive ? liveNrfi : nrfiPitchers
+
   // Date navigation
-  const baseDate = new Date(2025, 7, 18) // Aug 18, 2025
+  const baseDate = new Date()
   const currentDate = new Date(baseDate)
   currentDate.setDate(currentDate.getDate() + dateOffset)
   const dateLabel = currentDate.toLocaleDateString("en-US", {
@@ -33,10 +102,10 @@ export default function NrfiPage() {
 
   // Filter by pitcher hand
   const filteredData = useMemo(() => {
-    if (handFilter === "All") return nrfiPitchers
+    if (handFilter === "All") return basePitchers
     const hand = handFilter === "RHP" ? "R" : "L"
-    return nrfiPitchers.filter((p) => p.hand === hand)
-  }, [handFilter])
+    return basePitchers.filter((p) => p.hand === hand)
+  }, [handFilter, basePitchers])
 
   return (
     <div className="min-h-screen bg-background">
@@ -101,9 +170,19 @@ export default function NrfiPage() {
       <main className="mx-auto max-w-[1440px] px-6 py-6 flex flex-col gap-6">
         {/* Title */}
         <div className="flex flex-col gap-1">
-          <h1 className="text-2xl font-bold text-foreground text-balance">No Run First Inning</h1>
+          <div className="flex items-center gap-3">
+            <h1 className="text-2xl font-bold text-foreground text-balance">No Run First Inning</h1>
+            {isLoading && isToday && <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />}
+            {isLive && (
+              <span className="text-[10px] font-semibold uppercase tracking-wider text-emerald-400 bg-emerald-400/10 px-2 py-0.5 rounded-md">
+                Live
+              </span>
+            )}
+          </div>
           <p className="text-sm text-muted-foreground">
-            Probable pitchers and their NRFI track records for today{"'"}s slate.
+            {isLive
+              ? `${liveNrfi.length} probable pitchers for today's slate. NRFI stats show season totals.`
+              : "Probable pitchers and their NRFI track records for today's slate."}
           </p>
         </div>
 

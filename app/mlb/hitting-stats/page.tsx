@@ -1,8 +1,9 @@
 "use client"
 
 import { useState, useMemo } from "react"
+import useSWR from "swr"
 import type { Player } from "@/lib/players-data"
-import { players } from "@/lib/players-data"
+import { players as staticPlayers } from "@/lib/players-data"
 import type { Pitcher } from "@/lib/matchup-data"
 import { getTodayMatchup, aggregateBatterStats } from "@/lib/matchup-data"
 import { DashboardHeader } from "@/components/dashboard-header"
@@ -11,6 +12,32 @@ import { PlayersTable } from "@/components/players-table"
 import { PlayerDetail } from "@/components/player-detail"
 import { TimeRangeFilter, type TimeRange } from "@/components/time-range-filter"
 import { Switch } from "@/components/ui/switch"
+import type { BattingLeader } from "@/lib/mlb-api"
+
+const fetcher = (url: string) => fetch(url).then((r) => r.json())
+
+function transformBattingLeaders(leaders: BattingLeader[]): Player[] {
+  return leaders.map((l) => ({
+    id: String(l.id),
+    name: l.name,
+    position: l.pos,
+    team: l.team,
+    gamesPlayed: l.gamesPlayed,
+    atBats: l.atBats,
+    runs: l.runs,
+    hits: l.hits,
+    doubles: l.doubles,
+    triples: l.triples,
+    homeRuns: l.homeRuns,
+    rbi: l.rbi,
+    stolenBases: l.stolenBases,
+    avg: l.avg,
+    obp: l.obp,
+    slg: l.slg,
+    ops: l.ops,
+    gameLogs: [],
+  }))
+}
 
 type BatterHandFilter = "All" | "LHH" | "RHH"
 
@@ -24,6 +51,17 @@ function filterByBatterHand(playerList: Player[], hand: BatterHandFilter): Playe
 
 export default function Page() {
   const [selectedPlayer, setSelectedPlayer] = useState<Player | null>(null)
+  const players = staticPlayers; // Declare the players variable
+
+  // Live data
+  const { data: liveData } = useSWR<{ leaders: BattingLeader[] }>("/api/mlb/batting", fetcher, {
+    revalidateOnFocus: false,
+    dedupingInterval: 3600000,
+  })
+  const livePlayers = useMemo(
+    () => (liveData?.leaders?.length ? transformBattingLeaders(liveData.leaders) : null),
+    [liveData]
+  )
 
   // Matchup state
   const matchup = getTodayMatchup()
@@ -46,10 +84,14 @@ export default function Page() {
     setSelectedPitchTypes(pitcher.arsenal.map((p) => p.pitchType))
   }
 
+  // Use live data when matchup mode is off, static for matchup mode
+  const basePlayers = matchupMode ? staticPlayers : (livePlayers ?? staticPlayers)
+  const isLive = !matchupMode && !!livePlayers
+
   // Filter players by batter hand
   const filteredPlayers = useMemo(
-    () => filterByBatterHand(players, batterHand),
-    [batterHand]
+    () => filterByBatterHand(basePlayers, batterHand),
+    [batterHand, basePlayers]
   )
 
   // Compute aggregated stats for each batter vs selected pitcher's pitch mix
@@ -114,9 +156,16 @@ export default function Page() {
           <div className="flex-1 flex flex-col gap-6 min-w-0">
             <div className="flex flex-col gap-4">
               <div className="flex flex-col gap-1">
+                <div className="flex items-center gap-3">
                 <h2 className="text-xl font-semibold text-foreground">
                   Players Hitting Stats
                 </h2>
+                {isLive && (
+                  <span className="text-[10px] font-semibold uppercase tracking-wider text-emerald-400 bg-emerald-400/10 px-2 py-0.5 rounded-md">
+                    Live
+                  </span>
+                )}
+              </div>
                 <p className="text-sm text-muted-foreground">
                   {matchupMode ? (
                     <>

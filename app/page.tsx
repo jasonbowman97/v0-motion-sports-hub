@@ -11,6 +11,16 @@ import { PlayersTable } from "@/components/players-table"
 import { PlayerDetail } from "@/components/player-detail"
 import { Switch } from "@/components/ui/switch"
 
+type BatterHandFilter = "All" | "LHH" | "RHH"
+
+function filterByBatterHand(playerList: Player[], hand: BatterHandFilter): Player[] {
+  if (hand === "All") return playerList
+  // LHH: show L batters + S (switch hitters who bat left vs RHP)
+  // RHH: show R batters + S (switch hitters who bat right vs LHP)
+  if (hand === "LHH") return playerList.filter((p) => p.position === "L" || p.position === "S")
+  return playerList.filter((p) => p.position === "R" || p.position === "S")
+}
+
 export default function Page() {
   const [selectedPlayer, setSelectedPlayer] = useState<Player | null>(null)
 
@@ -23,16 +33,25 @@ export default function Page() {
   const [minUsagePct, setMinUsagePct] = useState(5)
   const [matchupMode, setMatchupMode] = useState(true)
 
+  // Batter hand filter
+  const [batterHand, setBatterHand] = useState<BatterHandFilter>("All")
+
   // When pitcher changes, reset selected pitch types to their full arsenal
   function handlePitcherChange(pitcher: Pitcher) {
     setSelectedPitcher(pitcher)
     setSelectedPitchTypes(pitcher.arsenal.map((p) => p.pitchType))
   }
 
+  // Filter players by batter hand
+  const filteredPlayers = useMemo(
+    () => filterByBatterHand(players, batterHand),
+    [batterHand]
+  )
+
   // Compute aggregated stats for each batter vs selected pitcher's pitch mix
   const matchupStats = useMemo(() => {
     if (!matchupMode) return []
-    return players
+    return filteredPlayers
       .map((player) =>
         aggregateBatterStats(
           player.id,
@@ -44,7 +63,7 @@ export default function Page() {
         )
       )
       .filter((s) => s !== null)
-  }, [matchupMode, selectedPitcher, selectedPitchTypes])
+  }, [matchupMode, selectedPitcher, selectedPitchTypes, filteredPlayers])
 
   if (selectedPlayer) {
     return (
@@ -89,20 +108,47 @@ export default function Page() {
 
           {/* Main content area */}
           <div className="flex-1 flex flex-col gap-6 min-w-0">
-            <div className="flex flex-col gap-1">
-              <h2 className="text-xl font-semibold text-foreground">
-                Players Hitting Stats
-              </h2>
-              <p className="text-sm text-muted-foreground">
-                {matchupMode ? (
-                  <>
-                    vs {selectedPitcher.name} ({selectedPitcher.hand === "R" ? "RHP" : "LHP"}) — {selectedPitchTypes.length} pitch {selectedPitchTypes.length === 1 ? "type" : "types"} selected.{" "}
-                    <span className="text-muted-foreground/70">Click a row for game log details.</span>
-                  </>
-                ) : (
-                  "Overall season stats. Click on a player row to view their detailed game log."
-                )}
-              </p>
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+              <div className="flex flex-col gap-1">
+                <h2 className="text-xl font-semibold text-foreground">
+                  Players Hitting Stats
+                </h2>
+                <p className="text-sm text-muted-foreground">
+                  {matchupMode ? (
+                    <>
+                      vs {selectedPitcher.name} ({selectedPitcher.hand === "R" ? "RHP" : "LHP"})
+                      {batterHand !== "All" && ` — ${batterHand} only`}
+                      {" "}— {selectedPitchTypes.length} pitch {selectedPitchTypes.length === 1 ? "type" : "types"} selected.{" "}
+                      <span className="text-muted-foreground/70">Click a row for game log details.</span>
+                    </>
+                  ) : (
+                    <>
+                      Overall season stats{batterHand !== "All" ? ` — ${batterHand} only` : ""}.{" "}
+                      Click on a player row to view their detailed game log.
+                    </>
+                  )}
+                </p>
+              </div>
+
+              {/* Batter Hand Filter */}
+              <div className="flex items-center gap-3 shrink-0">
+                <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Batter</span>
+                <div className="flex rounded-lg border border-border overflow-hidden">
+                  {(["All", "LHH", "RHH"] as const).map((hand) => (
+                    <button
+                      key={hand}
+                      onClick={() => setBatterHand(hand)}
+                      className={`px-3.5 py-1.5 text-xs font-semibold transition-colors ${
+                        batterHand === hand
+                          ? "bg-primary text-primary-foreground"
+                          : "bg-card text-muted-foreground hover:text-foreground"
+                      }`}
+                    >
+                      {hand}
+                    </button>
+                  ))}
+                </div>
+              </div>
             </div>
 
             {/* Active pitch chips when in matchup mode */}
@@ -132,6 +178,7 @@ export default function Page() {
               onSelectPlayer={setSelectedPlayer}
               matchupStats={matchupStats}
               useMatchupStats={matchupMode}
+              filteredPlayers={filteredPlayers}
             />
           </div>
         </div>

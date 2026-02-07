@@ -17,6 +17,7 @@ interface PlayersTableProps {
   onSelectPlayer: (player: Player) => void
   matchupStats?: AggregatedBatterStats[]
   useMatchupStats: boolean
+  filteredPlayers?: Player[]
 }
 
 function getStatBounds(data: { slg: number; iso: number; exitVelo: number; barrelPct: number; hardHitPct: number; flyBallPct: number }[]) {
@@ -91,9 +92,10 @@ function normalizeRow(row: Player | AggregatedBatterStats): RowData {
   }
 }
 
-export function PlayersTable({ onSelectPlayer, matchupStats, useMatchupStats }: PlayersTableProps) {
+export function PlayersTable({ onSelectPlayer, matchupStats, useMatchupStats, filteredPlayers }: PlayersTableProps) {
   const showMatchup = useMatchupStats && matchupStats && matchupStats.length > 0
-  const rawData: (Player | AggregatedBatterStats)[] = showMatchup ? matchupStats : players
+  const basePlayers = filteredPlayers ?? players
+  const rawData: (Player | AggregatedBatterStats)[] = showMatchup ? matchupStats : basePlayers
   const rows = rawData.map(normalizeRow)
 
   const bounds = getStatBounds(rows)
@@ -147,7 +149,17 @@ export function PlayersTable({ onSelectPlayer, matchupStats, useMatchupStats }: 
                   <TableCell className="py-3">
                     <div className="flex items-center gap-2">
                       <span className="text-sm font-semibold text-foreground">{row.name}</span>
-                      <span className="text-xs text-muted-foreground">({row.position})</span>
+                      <span
+                        className={`inline-flex items-center rounded px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide ${
+                          row.position === "S"
+                            ? "bg-violet-500/15 text-violet-400"
+                            : row.position === "L"
+                              ? "bg-amber-500/15 text-amber-400"
+                              : "bg-sky-500/15 text-sky-400"
+                        }`}
+                      >
+                        {row.position === "S" ? "S" : row.position === "L" ? "L" : "R"}
+                      </span>
                     </div>
                   </TableCell>
                   <TableCell className="py-3 text-right">

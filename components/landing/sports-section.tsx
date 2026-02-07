@@ -18,8 +18,8 @@ const sports = [
     icon: Crosshair,
     href: "/nba/first-basket",
     description:
-      "First basket analysis, tip-off win tracking, shot attempt rates, and team scoring patterns. Filter by matchup, time frame, and game slate.",
-    stats: ["First Basket Tracking", "Tip-Off Win Rates", "1st Shot Attempt %", "Team Scoring Patterns"],
+      "First basket analysis, tip-off win tracking, team head-to-head breakdowns, defensive matchups, and injury reports. Filter by matchup, time frame, and game slate.",
+    stats: ["First Basket Tracking", "Head-to-Head Analysis", "Defense vs Position", "Injury Reports"],
     accentClass: "text-accent bg-accent/10",
   },
   {

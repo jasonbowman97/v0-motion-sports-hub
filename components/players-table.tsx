@@ -24,19 +24,19 @@ interface PlayersTableProps {
   timeRange?: TimeRange
 }
 
-function getStatBounds(data: { slg: number; iso: number; exitVelo: number; barrelPct: number; hardHitPct: number; flyBallPct: number }[]) {
+function getStatBounds(data: { avg: number; slg: number; exitVelo: number; barrelPct: number; hardHitPct: number; flyBallPct: number }[]) {
   const nonZero = data.filter((d) => d.slg > 0 || d.exitVelo > 0)
   if (nonZero.length === 0) {
     return {
+      avg: { min: 0, max: 0.400 },
       slg: { min: 0, max: 1 },
-      iso: { min: 0, max: 1 },
       exitVelo: { min: 70, max: 100 },
       barrelPct: { min: 0, max: 15 },
       hardHitPct: { min: 0, max: 60 },
       flyBallPct: { min: 0, max: 50 },
     }
   }
-  const fields = ["slg", "iso", "exitVelo", "barrelPct", "hardHitPct", "flyBallPct"] as const
+  const fields = ["avg", "slg", "exitVelo", "barrelPct", "hardHitPct", "flyBallPct"] as const
   const bounds: Record<string, { min: number; max: number }> = {}
   for (const field of fields) {
     const values = nonZero.map((p) => p[field])
@@ -51,8 +51,9 @@ type RowData = {
   position: string
   team: string
   abs: number
+  avg: number
   slg: number
-  iso: number
+  xbh: number
   hr: number
   exitVelo: number
   barrelPct: number
@@ -69,8 +70,9 @@ function normalizeRow(row: Player | AggregatedBatterStats): RowData {
       position: row.position,
       team: row.team,
       abs: row.abs,
+      avg: row.avg,
       slg: row.slg,
-      iso: row.iso,
+      xbh: row.xbh,
       hr: row.hr,
       exitVelo: row.exitVelo,
       barrelPct: row.barrelPct,
@@ -85,8 +87,9 @@ function normalizeRow(row: Player | AggregatedBatterStats): RowData {
     position: row.position,
     team: row.team,
     abs: row.abs,
+    avg: row.avg,
     slg: row.slg,
-    iso: row.iso,
+    xbh: row.xbh,
     hr: row.hr,
     exitVelo: row.exitVelo,
     barrelPct: row.barrelPct,
@@ -109,12 +112,13 @@ export function PlayersTable({ onSelectPlayer, matchupStats, useMatchupStats, fi
       const allLogs = getGameLogs(player.id)
       const filtered = filterByTimeRange(allLogs, timeRange)
       if (filtered.length === 0) {
-        return { ...player, abs: 0, slg: 0, iso: 0, hr: 0, exitVelo: 0, barrelPct: 0, hardHitPct: 0, flyBallPct: 0, pulledAirPct: 0 }
+        return { ...player, abs: 0, avg: 0, slg: 0, xbh: 0, hr: 0, exitVelo: 0, barrelPct: 0, hardHitPct: 0, flyBallPct: 0, pulledAirPct: 0 }
       }
       // Recalculate aggregate stats from filtered game logs
       const abs = filtered.length
       const hrs = filtered.filter((l) => l.result === "HR").length
       const hits = filtered.filter((l) => ["1B", "2B", "3B", "HR"].includes(l.result))
+      const xbh = filtered.filter((l) => ["2B", "3B", "HR"].includes(l.result)).length
       const totalBases = hits.reduce((sum, l) => {
         if (l.result === "1B") return sum + 1
         if (l.result === "2B") return sum + 2
@@ -122,6 +126,7 @@ export function PlayersTable({ onSelectPlayer, matchupStats, useMatchupStats, fi
         if (l.result === "HR") return sum + 4
         return sum
       }, 0)
+      const battingAvg = abs > 0 ? hits.length / abs : 0
       const slg = abs > 0 ? totalBases / abs : 0
       const avgEv = filtered.reduce((s, l) => s + l.exitVelo, 0) / filtered.length
       const barrels = filtered.filter((l) => l.barrel).length
@@ -132,13 +137,13 @@ export function PlayersTable({ onSelectPlayer, matchupStats, useMatchupStats, fi
       return {
         ...player,
         abs,
+        avg: battingAvg,
         slg,
-        iso: slg - (hits.length / abs || 0),
+        xbh,
         hr: hrs,
         exitVelo: avgEv,
         barrelPct,
         hardHitPct,
-        // Keep original ratios for fly ball and pulled air since game logs don't have that detail
         flyBallPct: player.flyBallPct,
         pulledAirPct: player.pulledAirPct,
       }
@@ -162,8 +167,9 @@ export function PlayersTable({ onSelectPlayer, matchupStats, useMatchupStats, fi
               <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Team</TableHead>
               <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Player</TableHead>
               <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground text-right">ABs</TableHead>
+              <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground text-center">AVG</TableHead>
               <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground text-center">SLG</TableHead>
-              <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground text-center">ISO</TableHead>
+              <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground text-right">XBH</TableHead>
               <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground text-right">HR</TableHead>
               <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground text-center">Exit Velo</TableHead>
               <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground text-center">Barrel %</TableHead>
@@ -216,14 +222,17 @@ export function PlayersTable({ onSelectPlayer, matchupStats, useMatchupStats, fi
                     <span className="text-sm text-muted-foreground font-mono">{row.abs}</span>
                   </TableCell>
                   <TableCell className="py-3 text-center">
+                    <span className={`inline-flex items-center justify-center rounded-md px-2.5 py-1 text-xs font-semibold font-mono ${hasData ? getHeatmapColor(row.avg, bounds.avg.min, bounds.avg.max) : "bg-secondary text-muted-foreground"}`}>
+                      {hasData ? row.avg.toFixed(3) : "-"}
+                    </span>
+                  </TableCell>
+                  <TableCell className="py-3 text-center">
                     <span className={`inline-flex items-center justify-center rounded-md px-2.5 py-1 text-xs font-semibold font-mono ${hasData ? getHeatmapColor(row.slg, bounds.slg.min, bounds.slg.max) : "bg-secondary text-muted-foreground"}`}>
                       {hasData ? row.slg.toFixed(3) : "-"}
                     </span>
                   </TableCell>
-                  <TableCell className="py-3 text-center">
-                    <span className={`inline-flex items-center justify-center rounded-md px-2.5 py-1 text-xs font-semibold font-mono ${hasData ? getHeatmapColor(row.iso, bounds.iso.min, bounds.iso.max) : "bg-secondary text-muted-foreground"}`}>
-                      {hasData ? row.iso.toFixed(3) : "-"}
-                    </span>
+                  <TableCell className="py-3 text-right">
+                    <span className="text-sm text-foreground font-mono">{row.xbh}</span>
                   </TableCell>
                   <TableCell className="py-3 text-right">
                     <span className="text-sm text-foreground font-mono">{row.hr}</span>

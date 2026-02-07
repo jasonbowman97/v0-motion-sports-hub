@@ -9,6 +9,7 @@ import { DashboardHeader } from "@/components/dashboard-header"
 import { MatchupPanel } from "@/components/matchup-panel"
 import { PlayersTable } from "@/components/players-table"
 import { PlayerDetail } from "@/components/player-detail"
+import { TimeRangeFilter, type TimeRange } from "@/components/time-range-filter"
 import { Switch } from "@/components/ui/switch"
 
 type BatterHandFilter = "All" | "LHH" | "RHH"
@@ -35,6 +36,9 @@ export default function Page() {
 
   // Batter hand filter
   const [batterHand, setBatterHand] = useState<BatterHandFilter>("All")
+
+  // Time range filter
+  const [timeRange, setTimeRange] = useState<TimeRange>({ preset: "season" })
 
   // When pitcher changes, reset selected pitch types to their full arsenal
   function handlePitcherChange(pitcher: Pitcher) {
@@ -108,7 +112,7 @@ export default function Page() {
 
           {/* Main content area */}
           <div className="flex-1 flex flex-col gap-6 min-w-0">
-            <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+            <div className="flex flex-col gap-4">
               <div className="flex flex-col gap-1">
                 <h2 className="text-xl font-semibold text-foreground">
                   Players Hitting Stats
@@ -118,35 +122,50 @@ export default function Page() {
                     <>
                       vs {selectedPitcher.name} ({selectedPitcher.hand === "R" ? "RHP" : "LHP"})
                       {batterHand !== "All" && ` — ${batterHand} only`}
+                      {timeRange.preset !== "season" && ` — ${timeRange.preset === "custom" ? "custom range" : `last ${timeRange.preset.replace("L", "")} games`}`}
                       {" "}— {selectedPitchTypes.length} pitch {selectedPitchTypes.length === 1 ? "type" : "types"} selected.{" "}
                       <span className="text-muted-foreground/70">Click a row for game log details.</span>
                     </>
                   ) : (
                     <>
-                      Overall season stats{batterHand !== "All" ? ` — ${batterHand} only` : ""}.{" "}
+                      {timeRange.preset === "season"
+                        ? "Full season stats"
+                        : timeRange.preset === "custom"
+                          ? "Custom date range"
+                          : `Last ${timeRange.preset.replace("L", "")} games`}
+                      {batterHand !== "All" ? ` — ${batterHand} only` : ""}.{" "}
                       Click on a player row to view their detailed game log.
                     </>
                   )}
                 </p>
               </div>
 
-              {/* Batter Hand Filter */}
-              <div className="flex items-center gap-3 shrink-0">
-                <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Batter</span>
-                <div className="flex rounded-lg border border-border overflow-hidden">
-                  {(["All", "LHH", "RHH"] as const).map((hand) => (
-                    <button
-                      key={hand}
-                      onClick={() => setBatterHand(hand)}
-                      className={`px-3.5 py-1.5 text-xs font-semibold transition-colors ${
-                        batterHand === hand
-                          ? "bg-primary text-primary-foreground"
-                          : "bg-card text-muted-foreground hover:text-foreground"
-                      }`}
-                    >
-                      {hand}
-                    </button>
-                  ))}
+              {/* Filters row */}
+              <div className="flex flex-wrap items-center gap-4">
+                {/* Time Range Filter */}
+                <TimeRangeFilter value={timeRange} onChange={setTimeRange} />
+
+                {/* Divider */}
+                <div className="hidden sm:block h-6 w-px bg-border" />
+
+                {/* Batter Hand Filter */}
+                <div className="flex items-center gap-3">
+                  <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Batter</span>
+                  <div className="flex rounded-lg border border-border overflow-hidden">
+                    {(["All", "LHH", "RHH"] as const).map((hand) => (
+                      <button
+                        key={hand}
+                        onClick={() => setBatterHand(hand)}
+                        className={`px-3.5 py-1.5 text-xs font-semibold transition-colors ${
+                          batterHand === hand
+                            ? "bg-primary text-primary-foreground"
+                            : "bg-card text-muted-foreground hover:text-foreground"
+                        }`}
+                      >
+                        {hand}
+                      </button>
+                    ))}
+                  </div>
                 </div>
               </div>
             </div>
@@ -179,6 +198,7 @@ export default function Page() {
               matchupStats={matchupStats}
               useMatchupStats={matchupMode}
               filteredPlayers={filteredPlayers}
+              timeRange={timeRange}
             />
           </div>
         </div>

@@ -9,15 +9,19 @@ import {
   TableRow,
 } from "@/components/ui/table"
 import type { Player } from "@/lib/players-data"
-import { getHeatmapColor, players } from "@/lib/players-data"
+import { getHeatmapColor, players, getGameLogs } from "@/lib/players-data"
 import type { AggregatedBatterStats } from "@/lib/matchup-data"
+import type { TimeRange } from "@/components/time-range-filter"
+import { filterByTimeRange } from "@/components/time-range-filter"
 import { ChevronRight } from "lucide-react"
+import { useMemo } from "react"
 
 interface PlayersTableProps {
   onSelectPlayer: (player: Player) => void
   matchupStats?: AggregatedBatterStats[]
   useMatchupStats: boolean
   filteredPlayers?: Player[]
+  timeRange?: TimeRange
 }
 
 function getStatBounds(data: { slg: number; iso: number; exitVelo: number; barrelPct: number; hardHitPct: number; flyBallPct: number }[]) {
@@ -92,10 +96,56 @@ function normalizeRow(row: Player | AggregatedBatterStats): RowData {
   }
 }
 
-export function PlayersTable({ onSelectPlayer, matchupStats, useMatchupStats, filteredPlayers }: PlayersTableProps) {
+export function PlayersTable({ onSelectPlayer, matchupStats, useMatchupStats, filteredPlayers, timeRange }: PlayersTableProps) {
   const showMatchup = useMatchupStats && matchupStats && matchupStats.length > 0
   const basePlayers = filteredPlayers ?? players
-  const rawData: (Player | AggregatedBatterStats)[] = showMatchup ? matchupStats : basePlayers
+
+  // When not in matchup mode and a time range is applied, recalculate stats from game logs
+  const timeFilteredPlayers = useMemo(() => {
+    if (showMatchup) return basePlayers
+    if (!timeRange || timeRange.preset === "season") return basePlayers
+
+    return basePlayers.map((player) => {
+      const allLogs = getGameLogs(player.id)
+      const filtered = filterByTimeRange(allLogs, timeRange)
+      if (filtered.length === 0) {
+        return { ...player, abs: 0, slg: 0, iso: 0, hr: 0, exitVelo: 0, barrelPct: 0, hardHitPct: 0, flyBallPct: 0, pulledAirPct: 0 }
+      }
+      // Recalculate aggregate stats from filtered game logs
+      const abs = filtered.length
+      const hrs = filtered.filter((l) => l.result === "HR").length
+      const hits = filtered.filter((l) => ["1B", "2B", "3B", "HR"].includes(l.result))
+      const totalBases = hits.reduce((sum, l) => {
+        if (l.result === "1B") return sum + 1
+        if (l.result === "2B") return sum + 2
+        if (l.result === "3B") return sum + 3
+        if (l.result === "HR") return sum + 4
+        return sum
+      }, 0)
+      const slg = abs > 0 ? totalBases / abs : 0
+      const avgEv = filtered.reduce((s, l) => s + l.exitVelo, 0) / filtered.length
+      const barrels = filtered.filter((l) => l.barrel).length
+      const hardHits = filtered.filter((l) => l.hardHit).length
+      const barrelPct = (barrels / filtered.length) * 100
+      const hardHitPct = (hardHits / filtered.length) * 100
+
+      return {
+        ...player,
+        abs,
+        slg,
+        iso: slg - (hits.length / abs || 0),
+        hr: hrs,
+        exitVelo: avgEv,
+        barrelPct,
+        hardHitPct,
+        // Keep original ratios for fly ball and pulled air since game logs don't have that detail
+        flyBallPct: player.flyBallPct,
+        pulledAirPct: player.pulledAirPct,
+      }
+    })
+  }, [basePlayers, showMatchup, timeRange])
+
+  const rawData: (Player | AggregatedBatterStats)[] = showMatchup ? matchupStats! : timeFilteredPlayers
   const rows = rawData.map(normalizeRow)
 
   const bounds = getStatBounds(rows)

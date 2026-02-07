@@ -15,7 +15,6 @@ export default function NFLMatchupPage() {
   const staticMatchups = getAllMatchups()
   const [selectedMatchup, setSelectedMatchup] = useState<NFLMatchup>(staticMatchups[0])
   const [currentDate, setCurrentDate] = useState(new Date())
-  const matchups = staticMatchups; // Declare the matchups variable
 
   const { data, isLoading } = useSWR<{ games: NFLScheduleGame[] }>("/api/nfl/schedule", fetcher, {
     revalidateOnFocus: false,

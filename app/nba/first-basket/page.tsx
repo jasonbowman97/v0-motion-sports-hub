@@ -30,8 +30,6 @@ function toLiveGames(espnGames: NBAScheduleGame[]) {
   }))
 }
 
-const todayGames = staticGames; // Declare todayGames variable
-
 export default function NBAFirstBasketPage() {
   const [date, setDate] = useState(new Date())
   const [gameFilter, setGameFilter] = useState("all")

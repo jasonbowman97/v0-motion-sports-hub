@@ -7,35 +7,39 @@ const plans = [
     name: "Free",
     price: "$0",
     period: "forever",
-    description: "Get started and explore the data.",
+    description: "Explore the dashboards and see the data.",
     cta: "Create free account",
     ctaVariant: "outline" as const,
     highlights: [
       { text: "1 sport (MLB, NBA, or NFL)", included: true },
-      { text: "Season overview stats", included: true },
-      { text: "5 player lookups per day", included: true },
-      { text: "Matchup mode", included: false },
-      { text: "Pitch arsenal breakdowns", included: false },
-      { text: "Custom date ranges", included: false },
-      { text: "Platoon & handedness filters", included: false },
+      { text: "Season-level overview stats", included: true },
+      { text: "5 dashboard views per day", included: true },
+      { text: "Basic trend alerts", included: true },
+      { text: "Full trend tracker access", included: false },
+      { text: "Pitch arsenal drill-downs", included: false },
+      { text: "H2H analysis & injury reports", included: false },
+      { text: "NRFI & first basket dashboards", included: false },
+      { text: "Custom date filtering", included: false },
     ],
   },
   {
     name: "Pro",
     price: "$12",
     period: "/month",
-    description: "Full access for serious analysts.",
+    description: "Unlimited access to every dashboard and feature.",
     cta: "Start 7-day free trial",
     ctaVariant: "default" as const,
     popular: true,
     highlights: [
       { text: "All 3 sports -- MLB, NBA, NFL", included: true },
-      { text: "Unlimited player lookups", included: true },
-      { text: "Full matchup intelligence", included: true },
-      { text: "Pitch arsenal with toggle control", included: true },
-      { text: "Time-range filtering (L5, L10, L30)", included: true },
-      { text: "Custom date windows", included: true },
-      { text: "Platoon & handedness splits", included: true },
+      { text: "All 12 dashboards, unlimited views", included: true },
+      { text: "Full hot & cold trend trackers", included: true },
+      { text: "Pitch arsenal drill-downs", included: true },
+      { text: "H2H analysis, momentum & injuries", included: true },
+      { text: "NRFI, first basket, and matchup tools", included: true },
+      { text: "Time-range & custom date filtering", included: true },
+      { text: "RHP/LHP and handedness splits", included: true },
+      { text: "Defense vs position breakdowns", included: true },
     ],
   },
 ]
@@ -49,11 +53,11 @@ export function PricingSection() {
             Pricing
           </span>
           <h2 className="mt-3 text-3xl font-bold tracking-tight text-foreground text-balance md:text-4xl">
-            Start free. Upgrade when you need more.
+            Start free. Unlock everything for $12/mo.
           </h2>
           <p className="mx-auto mt-4 max-w-xl text-muted-foreground">
-            The free tier gives you a real taste of the data. Go Pro when you are
-            ready for the full analytical toolkit.
+            The free tier lets you explore the data. Go Pro to get full access to
+            all 12 dashboards and every filtering tool.
           </p>
         </div>
 

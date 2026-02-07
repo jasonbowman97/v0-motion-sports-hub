@@ -1,4 +1,4 @@
-import { Activity, Crosshair, Flame } from "lucide-react"
+import { Activity, Crosshair, Flame, ArrowRight } from "lucide-react"
 import Link from "next/link"
 
 const sports = [
@@ -6,71 +6,69 @@ const sports = [
     name: "MLB",
     label: "Baseball",
     icon: Activity,
-    href: "/mlb/hitting-stats",
-    description:
-      "Pitcher vs. batter matchups, pitch arsenal breakdowns, exit velocity trends, barrel rates, and NRFI tracking. Filter by handedness, pitch type, and time range.",
-    stats: ["Pitching Stats & Arsenal", "Batter vs. Pitcher Matchups", "NRFI Tracking", "Hot & Cold Trends"],
     accentClass: "text-primary bg-primary/10",
+    description:
+      "Pitcher arsenals, batter vs. pitcher matchups, NRFI probabilities, and strikeout projections. Drill into every pitch type with heatmap-colored stat breakdowns.",
+    dashboards: [
+      { name: "Hitting Stats", href: "/mlb/hitting-stats", description: "Batter matchups, exit velo, barrel rates, platoon splits" },
+      { name: "NRFI", href: "/mlb/nrfi", description: "No Run First Inning records, streaks, opponent ranks" },
+      { name: "Pitching Stats", href: "/mlb/pitching-stats", description: "ERA, K%, CSW%, pitch arsenal breakdowns" },
+      { name: "Trends", href: "/mlb/trends", description: "Hit streaks, XBH runs, HR surges, cold slumps" },
+    ],
   },
   {
     name: "NBA",
     label: "Basketball",
     icon: Crosshair,
-    href: "/nba/first-basket",
-    description:
-      "First basket analysis, tip-off win tracking, team head-to-head breakdowns, defensive matchups, and injury reports. Filter by matchup, time frame, and game slate.",
-    stats: ["First Basket Tracking", "Head-to-Head Analysis", "Defense vs Position", "Hot & Cold Trends"],
     accentClass: "text-accent bg-accent/10",
+    description:
+      "First basket probabilities, team head-to-head history, defensive position rankings, betting metrics, injury tracking, and momentum indicators.",
+    dashboards: [
+      { name: "First Basket", href: "/nba/first-basket", description: "Tip-off win %, 1st shot %, basket rank by player" },
+      { name: "Head-to-Head", href: "/nba/head-to-head", description: "Team H2H, momentum, defense vs position, injuries" },
+      { name: "Trends", href: "/nba/trends", description: "Scoring runs, 3PT streaks, rebound and assist surges" },
+    ],
   },
   {
     name: "NFL",
     label: "Football",
     icon: Flame,
-    href: "/nfl/matchup",
-    description:
-      "Head-to-head matchup breakdowns, passing/rushing/receiving splits, team stat comparisons with league rankings, and recent game log trends.",
-    stats: ["Team Stat Comparisons", "Positional Breakdowns", "League Rankings", "Hot & Cold Trends"],
     accentClass: "text-primary bg-primary/10",
+    description:
+      "Full team stat comparisons with league rankings, side-by-side passing, rushing, and receiving breakdowns with recent game log chips.",
+    dashboards: [
+      { name: "Matchup", href: "/nfl/matchup", description: "Team stats, positional splits, game log trends" },
+      { name: "Trends", href: "/nfl/trends", description: "Passing yard streaks, rushing TDs, target surges" },
+    ],
   },
 ]
 
 export function SportsSection() {
   return (
-    <section id="sports" className="py-20 md:py-32">
+    <section id="dashboards" className="py-20 md:py-32">
       <div className="mx-auto max-w-7xl px-6">
         <div className="text-center mb-16">
           <span className="text-xs font-semibold uppercase tracking-widest text-primary">
-            Coverage
+            Dashboards
           </span>
           <h2 className="mt-3 text-3xl font-bold tracking-tight text-foreground text-balance md:text-4xl">
-            Three leagues. One platform.
+            9 dashboards. 3 trend trackers. Zero fluff.
           </h2>
           <p className="mx-auto mt-4 max-w-xl text-muted-foreground">
-            Deep analytics for every sport that matters. Each league gets a
-            purpose-built dashboard tailored to its unique data.
+            Every sport gets purpose-built dashboards tailored to its unique
+            data points and the edges that actually matter.
           </p>
         </div>
 
-        <div className="grid gap-6 md:grid-cols-3">
-          {sports.map((sport) => {
-            const Wrapper = sport.comingSoon ? "div" : Link
-            const wrapperProps = sport.comingSoon ? {} : { href: sport.href }
-            return (
-              <Wrapper
-                key={sport.name}
-                {...(wrapperProps as Record<string, string>)}
-                className={`group relative flex flex-col rounded-xl border border-border bg-card p-8 transition-colors ${
-                  sport.comingSoon
-                    ? "opacity-60 cursor-not-allowed"
-                    : "hover:border-primary/30"
-                }`}
-              >
-                {sport.comingSoon && (
-                  <span className="absolute top-4 right-4 text-[10px] font-bold uppercase tracking-widest text-muted-foreground bg-secondary px-2.5 py-1 rounded-md">
-                    Coming soon
-                  </span>
-                )}
-                <div className="flex items-center gap-3 mb-6">
+        <div className="grid gap-8 lg:grid-cols-3">
+          {sports.map((sport) => (
+            <div
+              key={sport.name}
+              className="flex flex-col rounded-xl border border-border bg-card overflow-hidden"
+            >
+              {/* Sport header */}
+              <div className="p-6 pb-4">
+                <div className="flex items-center gap-3 mb-4">
                   <div className={`flex h-10 w-10 items-center justify-center rounded-lg ${sport.accentClass}`}>
                     <sport.icon className="h-5 w-5" />
                   </div>
@@ -78,34 +76,39 @@ export function SportsSection() {
                     <h3 className="text-xl font-bold text-foreground">{sport.name}</h3>
                     <p className="text-xs text-muted-foreground">{sport.label}</p>
                   </div>
+                  <span className="ml-auto text-xs font-mono text-muted-foreground bg-secondary px-2 py-0.5 rounded">
+                    {sport.dashboards.length} views
+                  </span>
                 </div>
-
-                <p className="text-sm leading-relaxed text-muted-foreground mb-6">
+                <p className="text-sm leading-relaxed text-muted-foreground">
                   {sport.description}
                 </p>
+              </div>
 
-                <div className="mt-auto flex flex-col gap-2">
-                  {sport.stats.map((stat) => (
-                    <div
-                      key={stat}
-                      className="flex items-center gap-2 text-xs text-foreground/80"
-                    >
-                      <span className="h-1 w-1 rounded-full bg-primary shrink-0" />
-                      {stat}
+              {/* Dashboard links */}
+              <div className="mt-auto border-t border-border">
+                {sport.dashboards.map((dashboard, i) => (
+                  <Link
+                    key={dashboard.name}
+                    href={dashboard.href}
+                    className={`group flex items-center justify-between p-4 transition-colors hover:bg-secondary/50 ${
+                      i < sport.dashboards.length - 1 ? "border-b border-border/50" : ""
+                    }`}
+                  >
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-semibold text-foreground group-hover:text-primary transition-colors">
+                        {dashboard.name}
+                      </p>
+                      <p className="text-xs text-muted-foreground mt-0.5 truncate">
+                        {dashboard.description}
+                      </p>
                     </div>
-                  ))}
-                </div>
-
-                {!sport.comingSoon && (
-                  <div className="mt-6 pt-4 border-t border-border">
-                    <span className="text-xs font-semibold text-primary group-hover:underline">
-                      Explore dashboard
-                    </span>
-                  </div>
-                )}
-              </Wrapper>
-            )
-          })}
+                    <ArrowRight className="h-3.5 w-3.5 text-muted-foreground group-hover:text-primary transition-colors shrink-0 ml-3" />
+                  </Link>
+                ))}
+              </div>
+            </div>
+          ))}
         </div>
       </div>
     </section>

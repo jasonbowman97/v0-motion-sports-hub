@@ -2,11 +2,39 @@
 
 import { useState } from "react"
 import Link from "next/link"
-import { BarChart3, Menu, X } from "lucide-react"
+import { BarChart3, Menu, X, ChevronDown } from "lucide-react"
 import { Button } from "@/components/ui/button"
+
+const sportLinks = [
+  {
+    sport: "MLB",
+    pages: [
+      { name: "Hitting Stats", href: "/mlb/hitting-stats" },
+      { name: "NRFI", href: "/mlb/nrfi" },
+      { name: "Pitching Stats", href: "/mlb/pitching-stats" },
+      { name: "Trends", href: "/mlb/trends" },
+    ],
+  },
+  {
+    sport: "NBA",
+    pages: [
+      { name: "First Basket", href: "/nba/first-basket" },
+      { name: "Head-to-Head", href: "/nba/head-to-head" },
+      { name: "Trends", href: "/nba/trends" },
+    ],
+  },
+  {
+    sport: "NFL",
+    pages: [
+      { name: "Matchup", href: "/nfl/matchup" },
+      { name: "Trends", href: "/nfl/trends" },
+    ],
+  },
+]
 
 export function Navbar() {
   const [mobileOpen, setMobileOpen] = useState(false)
+  const [openDropdown, setOpenDropdown] = useState<string | null>(null)
 
   return (
     <header className="fixed top-0 left-0 right-0 z-50 border-b border-border/50 bg-background/80 backdrop-blur-xl">
@@ -21,9 +49,9 @@ export function Navbar() {
         </Link>
 
         {/* Desktop nav */}
-        <div className="hidden items-center gap-8 md:flex">
-          <a href="#sports" className="text-sm text-muted-foreground transition-colors hover:text-foreground">
-            Sports
+        <div className="hidden items-center gap-6 md:flex">
+          <a href="#dashboards" className="text-sm text-muted-foreground transition-colors hover:text-foreground">
+            Dashboards
           </a>
           <a href="#features" className="text-sm text-muted-foreground transition-colors hover:text-foreground">
             Features
@@ -31,15 +59,41 @@ export function Navbar() {
           <a href="#pricing" className="text-sm text-muted-foreground transition-colors hover:text-foreground">
             Pricing
           </a>
-          <Link href="/mlb/hitting-stats" className="text-sm text-muted-foreground transition-colors hover:text-foreground">
-            MLB
-          </Link>
-          <Link href="/nba/first-basket" className="text-sm text-muted-foreground transition-colors hover:text-foreground">
-            NBA
-          </Link>
-          <Link href="/nfl/matchup" className="text-sm text-muted-foreground transition-colors hover:text-foreground">
-            NFL
-          </Link>
+
+          <div className="h-4 w-px bg-border" />
+
+          {/* Sport dropdowns */}
+          {sportLinks.map((sport) => (
+            <div
+              key={sport.sport}
+              className="relative"
+              onMouseEnter={() => setOpenDropdown(sport.sport)}
+              onMouseLeave={() => setOpenDropdown(null)}
+            >
+              <button
+                className="flex items-center gap-1 text-sm text-muted-foreground transition-colors hover:text-foreground"
+                onClick={() => setOpenDropdown(openDropdown === sport.sport ? null : sport.sport)}
+              >
+                {sport.sport}
+                <ChevronDown className={`h-3 w-3 transition-transform ${openDropdown === sport.sport ? "rotate-180" : ""}`} />
+              </button>
+
+              {openDropdown === sport.sport && (
+                <div className="absolute top-full left-0 mt-2 w-48 rounded-lg border border-border bg-card p-1.5 shadow-xl shadow-background/50">
+                  {sport.pages.map((page) => (
+                    <Link
+                      key={page.href}
+                      href={page.href}
+                      className="block rounded-md px-3 py-2 text-sm text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
+                      onClick={() => setOpenDropdown(null)}
+                    >
+                      {page.name}
+                    </Link>
+                  ))}
+                </div>
+              )}
+            </div>
+          ))}
         </div>
 
         <div className="hidden items-center gap-3 md:flex">
@@ -65,12 +119,30 @@ export function Navbar() {
       {mobileOpen && (
         <div className="border-t border-border bg-background px-6 py-6 md:hidden">
           <div className="flex flex-col gap-4">
-            <a href="#sports" onClick={() => setMobileOpen(false)} className="text-sm text-muted-foreground">Sports</a>
+            <a href="#dashboards" onClick={() => setMobileOpen(false)} className="text-sm text-muted-foreground">Dashboards</a>
             <a href="#features" onClick={() => setMobileOpen(false)} className="text-sm text-muted-foreground">Features</a>
             <a href="#pricing" onClick={() => setMobileOpen(false)} className="text-sm text-muted-foreground">Pricing</a>
-            <Link href="/mlb/hitting-stats" onClick={() => setMobileOpen(false)} className="text-sm text-muted-foreground">MLB Dashboard</Link>
-            <Link href="/nba/first-basket" onClick={() => setMobileOpen(false)} className="text-sm text-muted-foreground">NBA Dashboard</Link>
-            <Link href="/nfl/matchup" onClick={() => setMobileOpen(false)} className="text-sm text-muted-foreground">NFL Dashboard</Link>
+
+            {sportLinks.map((sport) => (
+              <div key={sport.sport} className="border-t border-border/50 pt-3">
+                <p className="text-xs font-bold uppercase tracking-widest text-primary mb-2">
+                  {sport.sport}
+                </p>
+                <div className="flex flex-col gap-1.5 pl-2">
+                  {sport.pages.map((page) => (
+                    <Link
+                      key={page.href}
+                      href={page.href}
+                      onClick={() => setMobileOpen(false)}
+                      className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+                    >
+                      {page.name}
+                    </Link>
+                  ))}
+                </div>
+              </div>
+            ))}
+
             <div className="flex flex-col gap-2 pt-2 border-t border-border">
               <Button variant="ghost" size="sm" className="justify-start text-muted-foreground" asChild>
                 <Link href="/mlb/hitting-stats">Log in</Link>

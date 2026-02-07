@@ -1,41 +1,41 @@
-import { Filter, Layers, LineChart, Shield, Clock, ToggleLeft } from "lucide-react"
+import { Filter, BarChart3, TrendingUp, Shield, Users, AlertTriangle } from "lucide-react"
 
 const features = [
   {
+    icon: BarChart3,
+    title: "Heatmap-Colored Stat Tables",
+    description:
+      "Every stat cell is color-coded from red to green so you can instantly see who's elite and who's struggling. Applied across ERA, K%, NRFI%, tip win rates, and more.",
+  },
+  {
+    icon: TrendingUp,
+    title: "Hot & Cold Trend Detection",
+    description:
+      "Automatically surfaces players on multi-game streaks -- hitting XBH, scoring 25+, or rushing 100+ yards. Catches cold slumps too, so you know who to fade.",
+  },
+  {
     icon: Filter,
-    title: "Granular Filtering",
+    title: "Deep Filtering",
     description:
-      "Slice data by pitcher hand, batter hand, pitch type, time range, and custom date windows. Deselect low-usage pitches to keep stats clean.",
+      "Slice data by pitcher hand (RHP/LHP), time range (L5, L10, season), date windows, matchup, and game slate. Built for granular analysis, not broad overviews.",
   },
   {
-    icon: LineChart,
-    title: "Heatmap Visualization",
+    icon: Users,
+    title: "Head-to-Head Breakdowns",
     description:
-      "Color-coded stat cells make it instant to spot who's hot and who's cold. Red-to-green gradients across every key metric.",
-  },
-  {
-    icon: Layers,
-    title: "Matchup Intelligence",
-    description:
-      "Auto-pulls today's opposing pitcher and their full arsenal. See how every batter on your roster performs against each pitch type.",
-  },
-  {
-    icon: Clock,
-    title: "Time-Based Trends",
-    description:
-      "Compare full-season numbers to last 5, 10, 15, or 30 games. Spot slumps and streaks before the market catches on.",
-  },
-  {
-    icon: ToggleLeft,
-    title: "Pitch Threshold Control",
-    description:
-      "Set a minimum usage percentage and toggle individual pitches on or off. Eliminate small sample noise from your analysis.",
+      "Team vs team history, momentum indicators, win/loss streaks, ATS records, and defense vs position rankings. Know the matchup before you commit.",
   },
   {
     icon: Shield,
-    title: "Platoon Splits",
+    title: "Pitch Arsenal Drill-Downs",
     description:
-      "Filter entire roster by LHH or RHH to see how your lineup stacks up from each side of the plate against any pitcher.",
+      "Click any pitcher to see their full arsenal -- usage %, AVG, SLG, ISO, barrel rate, and hard-hit rate per pitch. Color-coded so you spot the exploitable pitch instantly.",
+  },
+  {
+    icon: AlertTriangle,
+    title: "Injury & Availability Tracking",
+    description:
+      "Live injury reports with Day-to-Day and Out status badges for both teams. Know exactly which key players are missing before making any decisions.",
   },
 ]
 
@@ -48,11 +48,11 @@ export function FeaturesSection() {
             Features
           </span>
           <h2 className="mt-3 text-3xl font-bold tracking-tight text-foreground text-balance md:text-4xl">
-            Built for analysts, not casual fans
+            Tools that match how you actually research
           </h2>
           <p className="mx-auto mt-4 max-w-xl text-muted-foreground">
-            Every control exists for a reason. Filter, compare, and drill down
-            until you find the edge that matters.
+            Every control and visualization exists to help you find actionable
+            edges faster -- across all three sports.
           </p>
         </div>
 

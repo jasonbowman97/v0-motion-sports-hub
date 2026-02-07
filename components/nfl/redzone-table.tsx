@@ -35,6 +35,9 @@ const teams = [
   "NO","NYG","NYJ","PHI","PIT","SEA","SF","TB","TEN","WAS",
 ]
 
+const zoneLabels = ["Red Zone"]
+const zones = ["redzone"]
+
 function SortButton({
   label,
   active,
@@ -121,17 +124,15 @@ export function RedzoneTable() {
 
   const zoneHeaders = tab === "passing" ? passingHeaders : tab === "rushing" ? rushingHeaders : receivingHeaders
   const zoneFields = tab === "passing" ? passingFields : tab === "rushing" ? rushingFields : receivingFields
-  const zones = ["redzone", "inside10", "inside5"]
-  const zoneLabels = ["Redzone Totals", "Inside 10", "Inside 5"]
 
-  function renderZoneCells(player: Record<string, unknown>, zone: string) {
-    const zoneObj = player[zone] as Record<string, number>
+  function renderZoneCells(player: Record<string, unknown>) {
+    const zoneObj = player.redzone as Record<string, number>
     return zoneFields.map((f) => {
       const val = zoneObj[f]
       const display = f === "compPct" || f === "avg" ? val.toFixed(1) : val
       const suffix = f === "compPct" ? "%" : ""
       return (
-        <TableCell key={`${zone}-${f}`} className="py-3 text-center">
+        <TableCell key={`rz-${f}`} className="py-3 text-center">
           <span className="text-sm text-foreground font-mono tabular-nums">
             {display}{suffix}
           </span>
@@ -194,17 +195,9 @@ export function RedzoneTable() {
               <TableHead colSpan={4} className="text-center text-xs font-bold uppercase tracking-wider text-foreground border-r border-border py-2">
                 Player
               </TableHead>
-              {zoneLabels.map((label, i) => (
-                <TableHead
-                  key={label}
-                  colSpan={zoneHeaders.length}
-                  className={`text-center text-xs font-bold uppercase tracking-wider text-foreground py-2 ${
-                    i < zoneLabels.length - 1 ? "border-r border-border" : ""
-                  }`}
-                >
-                  {label}
-                </TableHead>
-              ))}
+              <TableHead colSpan={zoneHeaders.length} className="text-center text-xs font-bold uppercase tracking-wider text-foreground py-2">
+                Redzone
+              </TableHead>
             </TableRow>
             {/* Column header row */}
             <TableRow className="hover:bg-transparent">
@@ -270,21 +263,12 @@ export function RedzoneTable() {
                     </span>
                   </TableCell>
                   {zones.map((zone, zi) => (
-                    renderZoneCells(player, zone).map((cell, ci) => {
+                    renderZoneCells(player).map((cell, ci) => {
                       const isLast = ci === zoneFields.length - 1 && zi < zones.length - 1
                       if (isLast) {
                         return (
                           <TableCell key={`${zone}-${zoneFields[ci]}-border`} className="py-3 text-center border-r border-border">
-                            <span className="text-sm text-foreground font-mono tabular-nums">
-                              {(() => {
-                                const zoneObj = player[zone] as Record<string, number>
-                                const val = zoneObj[zoneFields[ci]]
-                                const f = zoneFields[ci]
-                                const display = f === "compPct" || f === "avg" ? val.toFixed(1) : val
-                                const suffix = f === "compPct" ? "%" : ""
-                                return `${display}${suffix}`
-                              })()}
-                            </span>
+                            {cell}
                           </TableCell>
                         )
                       }

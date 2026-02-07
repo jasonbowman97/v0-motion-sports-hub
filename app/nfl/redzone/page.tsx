@@ -1,6 +1,12 @@
+"use client"
+
 import Link from "next/link"
-import { BarChart3 } from "lucide-react"
+import useSWR from "swr"
+import { BarChart3, Loader2 } from "lucide-react"
 import { RedzoneTable } from "@/components/nfl/redzone-table"
+import type { NFLScheduleGame } from "@/lib/nfl-api"
+
+const fetcher = (url: string) => fetch(url).then((r) => r.json())
 
 export const metadata = {
   title: "HeatCheck HQ - NFL Redzone Stats",

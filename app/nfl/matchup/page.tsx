@@ -1,16 +1,30 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useMemo } from "react"
+import useSWR from "swr"
 import { NFLHeader } from "@/components/nfl/nfl-header"
 import { TeamStatsComparison } from "@/components/nfl/team-stats-comparison"
 import { PassingSection, RushingSection, ReceivingSection } from "@/components/nfl/positional-tables"
 import { getAllMatchups, type NFLMatchup } from "@/lib/nfl-matchup-data"
-import { ChevronLeft, ChevronRight, Calendar } from "lucide-react"
+import type { NFLScheduleGame } from "@/lib/nfl-api"
+import { ChevronLeft, ChevronRight, Calendar, Loader2 } from "lucide-react"
+
+const fetcher = (url: string) => fetch(url).then((r) => r.json())
 
 export default function NFLMatchupPage() {
-  const matchups = getAllMatchups()
-  const [selectedMatchup, setSelectedMatchup] = useState<NFLMatchup>(matchups[0])
-  const [currentDate, setCurrentDate] = useState(new Date(2026, 1, 8)) // Feb 8, 2026
+  const staticMatchups = getAllMatchups()
+  const [selectedMatchup, setSelectedMatchup] = useState<NFLMatchup>(staticMatchups[0])
+  const [currentDate, setCurrentDate] = useState(new Date())
+  const matchups = staticMatchups; // Declare the matchups variable
+
+  const { data, isLoading } = useSWR<{ games: NFLScheduleGame[] }>("/api/nfl/schedule", fetcher, {
+    revalidateOnFocus: false,
+    dedupingInterval: 3600000,
+  })
+
+  const liveGames = data?.games ?? []
+  const isLive = liveGames.length > 0
+  const weekLabel = liveGames[0]?.week || ""
 
   const dateStr = currentDate.toLocaleDateString("en-US", {
     weekday: "short",
@@ -63,7 +77,7 @@ export default function NFLMatchupPage() {
           {/* Matchup chips */}
           <div className="flex flex-wrap items-center gap-2">
             <span className="text-xs font-medium uppercase tracking-wider text-muted-foreground mr-1">Games</span>
-            {matchups.map((m) => (
+            {staticMatchups.map((m) => (
               <button
                 key={m.id}
                 onClick={() => setSelectedMatchup(m)}
@@ -78,6 +92,32 @@ export default function NFLMatchupPage() {
             ))}
           </div>
         </div>
+
+        {/* Live game strip */}
+        {isLive && (
+          <div className="flex flex-wrap items-center gap-2 p-4 rounded-xl bg-card border border-border">
+            <div className="flex items-center gap-2 mr-2">
+              {isLoading && <Loader2 className="h-3.5 w-3.5 animate-spin text-muted-foreground" />}
+              <span className="text-[10px] font-semibold uppercase tracking-wider text-emerald-400 bg-emerald-400/10 px-2 py-0.5 rounded-md">
+                Live
+              </span>
+              {weekLabel && <span className="text-xs text-muted-foreground">{weekLabel}</span>}
+            </div>
+            {liveGames.map((g) => (
+              <div
+                key={g.id}
+                className="flex items-center gap-1.5 rounded-lg bg-secondary px-3 py-1.5 text-xs"
+              >
+                <span className="font-semibold text-foreground">{g.awayTeam.abbreviation}</span>
+                <span className="text-muted-foreground">@</span>
+                <span className="font-semibold text-foreground">{g.homeTeam.abbreviation}</span>
+                {g.odds && (
+                  <span className="text-muted-foreground ml-1">O/U {g.odds.overUnder}</span>
+                )}
+              </div>
+            ))}
+          </div>
+        )}
 
         {/* Matchup Header */}
         <div className="flex flex-col gap-1">

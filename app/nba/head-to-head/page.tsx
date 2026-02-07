@@ -1,18 +1,61 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useMemo } from "react"
 import Link from "next/link"
-import { BarChart3 } from "lucide-react"
-import { nbaGames } from "@/lib/nba-h2h-data"
+import useSWR from "swr"
+import { BarChart3, Loader2 } from "lucide-react"
+import { nbaGames as staticGames } from "@/lib/nba-h2h-data"
+import type { NBAGame } from "@/lib/nba-h2h-data"
+import type { NBAScheduleGame } from "@/lib/nba-api"
 import { H2HMatchupSelector } from "@/components/nba/h2h-matchup-selector"
 import { H2HHistory } from "@/components/nba/h2h-history"
 import { H2HMomentum } from "@/components/nba/h2h-momentum"
 import { H2HDefense } from "@/components/nba/h2h-defense"
 import { H2HInjuries } from "@/components/nba/h2h-injuries"
 
+const fetcher = (url: string) => fetch(url).then((r) => r.json())
+
+function espnToH2HGames(espnGames: NBAScheduleGame[]): NBAGame[] {
+  return espnGames.map((g) => {
+    const time = new Date(g.date).toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit", hour12: true })
+    return {
+      id: g.id,
+      awayAbbr: g.awayTeam.abbreviation,
+      awayName: g.awayTeam.displayName,
+      homeAbbr: g.homeTeam.abbreviation,
+      homeName: g.homeTeam.displayName,
+      date: new Date(g.date).toLocaleDateString("en-US", { month: "short", day: "numeric" }),
+      time,
+      venue: g.venue,
+      awayInjuries: [],
+      homeInjuries: [],
+      h2h: { record: "N/A", awayAvgPts: 0, homeAvgPts: 0, avgTotal: 0, margin: "N/A", meetings: [] },
+      awayMomentum: { trend: "Neutral" as const, streak: "N/A", l5: "N/A", l10: "N/A", l5Dots: [], l10Dots: [], ppg: 0, oppPpg: 0, ats: "N/A", ou: "N/A", homeRecord: "N/A", homePpg: 0, awayRecord: "N/A", awayPpg: 0 },
+      homeMomentum: { trend: "Neutral" as const, streak: "N/A", l5: "N/A", l10: "N/A", l5Dots: [], l10Dots: [], ppg: 0, oppPpg: 0, ats: "N/A", ou: "N/A", homeRecord: "N/A", homePpg: 0, awayRecord: "N/A", awayPpg: 0 },
+      awayDefense: [],
+      homeDefense: [],
+    }
+  })
+}
+
 export default function NBAH2HPage() {
-  const [selectedGameId, setSelectedGameId] = useState(nbaGames[0].id)
-  const selectedGame = nbaGames.find((g) => g.id === selectedGameId) ?? nbaGames[0]
+  const { data, isLoading } = useSWR<{ games: NBAScheduleGame[] }>("/api/nba/schedule", fetcher, {
+    revalidateOnFocus: false,
+    dedupingInterval: 3600000,
+  })
+
+  const liveGames = useMemo(() => (data?.games?.length ? espnToH2HGames(data.games) : null), [data])
+
+  // Merge: use live games for the matchup selector but fall back to static for detailed stats
+  const allGames = liveGames ?? staticGames
+  const isLive = !!liveGames
+
+  const [selectedGameId, setSelectedGameId] = useState<string | null>(null)
+  const activeId = selectedGameId ?? allGames[0]?.id
+  // Try to find a matching static game for full detail, otherwise use the live shell
+  const selectedGame = staticGames.find((g) => g.id === activeId)
+    ?? allGames.find((g) => g.id === activeId)
+    ?? allGames[0]
 
   return (
     <div className="min-h-screen bg-background">
@@ -67,7 +110,15 @@ export default function NBAH2HPage() {
 
       <main className="mx-auto max-w-[1440px] px-6 py-8">
         <div className="mb-8">
-          <h2 className="text-2xl font-bold text-foreground tracking-tight">Team vs Team H2H Analysis</h2>
+          <div className="flex items-center gap-3">
+            <h2 className="text-2xl font-bold text-foreground tracking-tight">Team vs Team H2H Analysis</h2>
+            {isLoading && <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />}
+            {isLive && (
+              <span className="text-[10px] font-semibold uppercase tracking-wider text-emerald-400 bg-emerald-400/10 px-2 py-0.5 rounded-md">
+                Live
+              </span>
+            )}
+          </div>
           <p className="text-sm text-muted-foreground mt-1">
             Comprehensive matchup analytics with betting insights and injury reports
           </p>
@@ -75,8 +126,8 @@ export default function NBAH2HPage() {
 
         <div className="flex flex-col gap-6">
           <H2HMatchupSelector
-            games={nbaGames}
-            selectedId={selectedGameId}
+            games={allGames}
+            selectedId={activeId}
             onSelect={setSelectedGameId}
           />
           <H2HHistory game={selectedGame} />

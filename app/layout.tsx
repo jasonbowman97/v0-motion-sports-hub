@@ -8,8 +8,8 @@ const _inter = Inter({ subsets: ['latin'] })
 const _jetbrainsMono = JetBrains_Mono({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
-  title: 'Diamond Analytics - Baseball Hitting Stats',
-  description: 'Advanced baseball analytics dashboard for hitting stats, player performance trends, and game log analysis.',
+  title: 'Diamond Analytics - Sports Analytics Platform',
+  description: 'Advanced analytics for MLB, NBA, and NFL. Turn raw data into actionable insights with matchup intelligence, heatmap visualizations, and granular filtering.',
 }
 
 export const viewport: Viewport = {

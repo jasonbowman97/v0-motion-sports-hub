@@ -46,7 +46,7 @@ export default function NrfiPage() {
           <div className="flex items-center gap-3">
             <Link href="/" className="flex items-center gap-2 text-foreground hover:text-primary transition-colors">
               <BarChart3 className="h-5 w-5 text-primary" />
-              <span className="text-sm font-bold tracking-tight">Diamond Analytics</span>
+              <span className="text-sm font-bold tracking-tight">HeatCheck HQ</span>
             </Link>
             <span className="text-muted-foreground/40">|</span>
             <span className="text-xs font-medium text-primary">MLB</span>

@@ -8,7 +8,7 @@ const _inter = Inter({ subsets: ['latin'] })
 const _jetbrainsMono = JetBrains_Mono({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
-  title: 'Diamond Analytics - Sports Analytics Platform',
+  title: 'HeatCheck HQ - Sports Analytics Platform',
   description: 'Advanced analytics for MLB, NBA, and NFL. Turn raw data into actionable insights with matchup intelligence, heatmap visualizations, and granular filtering.',
 }
 

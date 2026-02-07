@@ -4,7 +4,7 @@ import { TrendsDashboard } from "@/components/trends/trends-dashboard"
 import { mlbTrends, mlbCategories } from "@/lib/mlb-trends-data"
 
 export const metadata = {
-  title: "Diamond Analytics - MLB Trends",
+  title: "HeatCheck HQ - MLB Trends",
   description: "Hot and cold streaks for MLB players across hitting, power, pitching, and on-base performance.",
 }
 
@@ -20,7 +20,7 @@ export default function MLBTrendsPage() {
                 <BarChart3 className="h-5 w-5 text-primary" />
               </div>
               <div>
-                <h1 className="text-lg font-semibold tracking-tight text-foreground">Diamond Analytics</h1>
+                <h1 className="text-lg font-semibold tracking-tight text-foreground">HeatCheck HQ</h1>
                 <p className="text-xs text-muted-foreground">MLB Trends</p>
               </div>
             </Link>

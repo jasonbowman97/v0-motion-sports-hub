@@ -3,7 +3,7 @@ import { BarChart3 } from "lucide-react"
 import { RedzoneTable } from "@/components/nfl/redzone-table"
 
 export const metadata = {
-  title: "Diamond Analytics - NFL Redzone Stats",
+  title: "HeatCheck HQ - NFL Redzone Stats",
   description:
     "NFL redzone target and efficiency data. Passing, rushing, and receiving breakdowns for redzone performance.",
 }
@@ -20,7 +20,7 @@ export default function NFLRedzonePage() {
               </div>
               <div>
                 <h1 className="text-lg font-semibold tracking-tight text-foreground">
-                  Diamond Analytics
+                  HeatCheck HQ
                 </h1>
                 <p className="text-xs text-muted-foreground">NFL Redzone Stats</p>
               </div>

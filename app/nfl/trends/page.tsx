@@ -4,7 +4,7 @@ import { TrendsDashboard } from "@/components/trends/trends-dashboard"
 import { nflTrends, nflCategories } from "@/lib/nfl-trends-data"
 
 export const metadata = {
-  title: "Diamond Analytics - NFL Trends",
+  title: "HeatCheck HQ - NFL Trends",
   description: "Hot and cold streaks for NFL players across passing, rushing, receiving, and touchdowns.",
 }
 
@@ -19,7 +19,7 @@ export default function NFLTrendsPage() {
                 <BarChart3 className="h-5 w-5 text-primary" />
               </div>
               <div>
-                <h1 className="text-lg font-semibold tracking-tight text-foreground">Diamond Analytics</h1>
+                <h1 className="text-lg font-semibold tracking-tight text-foreground">HeatCheck HQ</h1>
                 <p className="text-xs text-muted-foreground">NFL Trends</p>
               </div>
             </Link>

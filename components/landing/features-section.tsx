@@ -1,4 +1,5 @@
 import { Filter, BarChart3, TrendingUp, Shield, Users, AlertTriangle } from "lucide-react"
+import { FadeIn } from "@/components/ui/fade-in"
 
 const features = [
   {
@@ -43,25 +44,25 @@ export function FeaturesSection() {
   return (
     <section id="features" className="py-20 md:py-32 border-t border-border">
       <div className="mx-auto max-w-7xl px-6">
-        <div className="text-center mb-16">
-          <span className="text-xs font-semibold uppercase tracking-widest text-primary">
-            Features
-          </span>
-          <h2 className="mt-3 text-3xl font-bold tracking-tight text-foreground text-balance md:text-4xl">
-            Tools that match how you actually research
-          </h2>
-          <p className="mx-auto mt-4 max-w-xl text-muted-foreground">
-            Every control and visualization exists to help you find actionable
-            edges faster -- across all three sports.
-          </p>
-        </div>
+        <FadeIn>
+          <div className="text-center mb-16">
+            <span className="text-xs font-semibold uppercase tracking-widest text-primary">
+              Features
+            </span>
+            <h2 className="mt-3 text-3xl font-bold tracking-tight text-foreground text-balance md:text-4xl">
+              Tools that match how you actually research
+            </h2>
+            <p className="mx-auto mt-4 max-w-xl text-muted-foreground">
+              Every control and visualization exists to help you find actionable
+              edges faster -- across all three sports.
+            </p>
+          </div>
+        </FadeIn>
 
         <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-          {features.map((feature) => (
-            <div
-              key={feature.title}
-              className="group flex flex-col gap-4 rounded-xl border border-border bg-card p-6 transition-colors hover:border-primary/30"
-            >
+          {features.map((feature, index) => (
+            <FadeIn key={feature.title} delay={0.1 + index * 0.05}>
+              <div className="group flex flex-col gap-4 rounded-xl border border-border bg-card p-6 transition-colors hover:border-primary/30 h-full">
               <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10 text-primary">
                 <feature.icon className="h-5 w-5" />
               </div>
@@ -71,7 +72,8 @@ export function FeaturesSection() {
               <p className="text-sm leading-relaxed text-muted-foreground">
                 {feature.description}
               </p>
-            </div>
+              </div>
+            </FadeIn>
           ))}
         </div>
       </div>

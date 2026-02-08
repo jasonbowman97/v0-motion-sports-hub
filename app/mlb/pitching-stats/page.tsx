@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useMemo } from "react"
+import { useState, useMemo, useEffect } from "react"
 import Link from "next/link"
 import useSWR from "swr"
 import { BarChart3, Loader2 } from "lucide-react"
@@ -9,6 +9,8 @@ import type { PitcherStats } from "@/lib/pitching-data"
 import { PitchingTable } from "@/components/mlb/pitching-table"
 import { PitcherArsenal } from "@/components/mlb/pitcher-arsenal"
 import type { PitchingLeader } from "@/lib/mlb-api"
+import { PaywallBanner } from "@/components/paywall-banner"
+import { createClient } from "@/lib/supabase/client"
 
 const fetcher = (url: string) => fetch(url).then((r) => r.json())
 
@@ -39,6 +41,29 @@ type HandFilter = "ALL" | "L" | "R"
 export default function PitchingStatsPage() {
   const [handFilter, setHandFilter] = useState<HandFilter>("ALL")
   const [selectedPitcher, setSelectedPitcher] = useState<PitcherStats | null>(null)
+  const [userStatus, setUserStatus] = useState<'none' | 'free' | 'pro'>('none')
+
+  useEffect(() => {
+    async function checkAuth() {
+      const supabase = createClient()
+      const { data: { user } } = await supabase.auth.getUser()
+
+      if (!user) {
+        setUserStatus('none')
+        return
+      }
+
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('subscription_status')
+        .eq('id', user.id)
+        .single()
+
+      setUserStatus(profile?.subscription_status || 'free')
+    }
+
+    checkAuth()
+  }, [])
 
   const { data, isLoading } = useSWR<{ leaders: PitchingLeader[] }>("/api/mlb/pitching", fetcher, {
     revalidateOnFocus: false,
@@ -52,6 +77,10 @@ export default function PitchingStatsPage() {
     if (handFilter === "ALL") return basePitchers
     return basePitchers.filter((p) => p.hand === handFilter)
   }, [handFilter, basePitchers])
+
+  if (userStatus !== 'pro') {
+    return <PaywallBanner userStatus={userStatus} dashboardName="MLB Pitching Stats" />
+  }
 
   return (
     <div className="min-h-screen bg-background">

@@ -26,7 +26,7 @@ const plans = [
     period: "/month",
     description:
       "Gain the advantage with expert-curated insights, comprehensive analytics, and live data updates to power smarter, faster decisions and keep you ahead of the competition.",
-    cta: "Start 7-day free trial",
+    cta: "Get Pro",
     ctaVariant: "default" as const,
     popular: true,
     highlights: [

@@ -267,41 +267,48 @@ export async function getNFLStreakTrends(): Promise<Trend[]> {
 
     const allStreaks: StreakResult[] = []
 
-    // Analyze QBs
-    for (const playerId of topQBIds) {
+    // Analyze all positions in parallel
+    const qbPromises = topQBIds.map(async (playerId) => {
       try {
         const gameLogs = await getPlayerGameLog(playerId)
-        if (gameLogs.length < 4) continue
-        const streaks = detectPassingStreaks(playerId, "QB Player", "NFL", gameLogs)
-        allStreaks.push(...streaks)
+        if (gameLogs.length < 4) return []
+        return detectPassingStreaks(playerId, "QB Player", "NFL", gameLogs)
       } catch (err) {
         console.error(`[NFL Streaks] Failed to fetch QB game log:`, err)
+        return []
       }
-    }
+    })
 
-    // Analyze RBs
-    for (const playerId of topRBIds) {
+    const rbPromises = topRBIds.map(async (playerId) => {
       try {
         const gameLogs = await getPlayerGameLog(playerId)
-        if (gameLogs.length < 4) continue
-        const streaks = detectRushingStreaks(playerId, "RB Player", "NFL", gameLogs)
-        allStreaks.push(...streaks)
+        if (gameLogs.length < 4) return []
+        return detectRushingStreaks(playerId, "RB Player", "NFL", gameLogs)
       } catch (err) {
         console.error(`[NFL Streaks] Failed to fetch RB game log:`, err)
+        return []
       }
-    }
+    })
 
-    // Analyze WRs
-    for (const playerId of topWRIds) {
+    const wrPromises = topWRIds.map(async (playerId) => {
       try {
         const gameLogs = await getPlayerGameLog(playerId)
-        if (gameLogs.length < 4) continue
-        const streaks = detectReceivingStreaks(playerId, "WR Player", "NFL", gameLogs)
-        allStreaks.push(...streaks)
+        if (gameLogs.length < 4) return []
+        return detectReceivingStreaks(playerId, "WR Player", "NFL", gameLogs)
       } catch (err) {
         console.error(`[NFL Streaks] Failed to fetch WR game log:`, err)
+        return []
       }
-    }
+    })
+
+    // Wait for all positions in parallel
+    const [qbResults, rbResults, wrResults] = await Promise.all([
+      Promise.all(qbPromises),
+      Promise.all(rbPromises),
+      Promise.all(wrPromises)
+    ])
+
+    allStreaks.push(...qbResults.flat(), ...rbResults.flat(), ...wrResults.flat())
 
     // Convert to Trend format
     const trends: Trend[] = allStreaks.map((streak, idx) => ({

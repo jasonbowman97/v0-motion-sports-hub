@@ -228,22 +228,26 @@ export async function getNBAStreakTrends(): Promise<Trend[]> {
 
     const allStreaks: StreakResult[] = []
 
-    for (const playerId of topPlayerIds) {
+    // Fetch all player game logs in parallel
+    const playerPromises = topPlayerIds.map(async (playerId) => {
       try {
         const gameLogs = await getPlayerGameLog(playerId)
-        if (gameLogs.length < 5) continue
+        if (gameLogs.length < 5) return []
 
         // Extract player info from first game log (ESPN includes it)
         const playerName = "NBA Player" // Would extract from ESPN response
         const team = "NBA"
         const position = "G"
 
-        const streaks = detectScoringStreaks(playerId, playerName, team, position, gameLogs)
-        allStreaks.push(...streaks)
+        return detectScoringStreaks(playerId, playerName, team, position, gameLogs)
       } catch (err) {
         console.error(`[NBA Streaks] Failed to fetch game log for player ${playerId}:`, err)
+        return []
       }
-    }
+    })
+
+    const results = await Promise.all(playerPromises)
+    allStreaks.push(...results.flat())
 
     // Convert to Trend format
     const trends: Trend[] = allStreaks.map((streak, idx) => ({

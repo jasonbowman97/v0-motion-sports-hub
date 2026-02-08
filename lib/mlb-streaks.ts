@@ -21,45 +21,54 @@ export async function getMLBStreakTrends(): Promise<Trend[]> {
 
     const allStreaks: StreakResult[] = []
 
-    // Analyze top 30 batters for streaks
+    // Analyze top 30 batters for streaks - PARALLEL FETCHING
     const topBatters = batters.slice(0, 30)
-    for (const batter of topBatters) {
+    const batterPromises = topBatters.map(async (batter) => {
       try {
         const gameLogs = await getPlayerGameLog(batter.id)
-        if (gameLogs.length < 5) continue // Need at least 5 games
+        if (gameLogs.length < 5) return [] // Need at least 5 games
 
-        const streaks = detectHittingStreaks(
+        return detectHittingStreaks(
           batter.id,
           batter.name,
           batter.team,
           batter.position,
           gameLogs
         )
-        allStreaks.push(...streaks)
       } catch (err) {
         console.error(`[MLB Streaks] Failed to fetch game log for ${batter.name}:`, err)
+        return []
       }
-    }
+    })
 
-    // Analyze top 20 pitchers for streaks
+    // Analyze top 20 pitchers for streaks - PARALLEL FETCHING
     const topPitchers = pitchers.slice(0, 20)
-    for (const pitcher of topPitchers) {
+    const pitcherPromises = topPitchers.map(async (pitcher) => {
       try {
         const gameLogs = await getPlayerGameLog(pitcher.id)
-        if (gameLogs.length < 3) continue // Need at least 3 games
+        if (gameLogs.length < 3) return [] // Need at least 3 games
 
-        const streaks = detectPitchingStreaks(
+        return detectPitchingStreaks(
           pitcher.id,
           pitcher.name,
           pitcher.team,
           "SP",
           gameLogs
         )
-        allStreaks.push(...streaks)
       } catch (err) {
         console.error(`[MLB Streaks] Failed to fetch game log for ${pitcher.name}:`, err)
+        return []
       }
-    }
+    })
+
+    // Wait for all in parallel
+    const [batterResults, pitcherResults] = await Promise.all([
+      Promise.all(batterPromises),
+      Promise.all(pitcherPromises)
+    ])
+
+    // Flatten results
+    allStreaks.push(...batterResults.flat(), ...pitcherResults.flat())
 
     // Convert streak results to Trend format
     const trends: Trend[] = allStreaks.map((streak, idx) => ({

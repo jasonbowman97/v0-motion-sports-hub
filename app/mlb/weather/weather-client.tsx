@@ -1,5 +1,6 @@
 "use client"
 
+import { useState, useEffect } from "react"
 import { useState, useMemo } from "react"
 import Link from "next/link"
 import useSWR from "swr"
@@ -7,6 +8,8 @@ import { BarChart3, ChevronLeft, ChevronRight, Calendar, Loader2 } from "lucide-
 import { Button } from "@/components/ui/button"
 import { WeatherTable } from "@/components/mlb/weather-table"
 import { stadiumWeatherData, type StadiumWeather } from "@/lib/mlb-weather-data"
+import { RowLimiter, limitRows } from "@/components/row-limiter"
+import { createClient } from "@/lib/supabase/client"
 
 /* ---------- park factors (simplified: venue keyword -> run multiplier) ---------- */
 const PARK_FACTORS: Record<string, number> = {
@@ -117,6 +120,31 @@ const fetcher = (url: string) => fetch(url).then((r) => r.json())
 
 export function WeatherPageClient() {
   const [dateOffset, setDateOffset] = useState(0)
+  const [userStatus, setUserStatus] = useState<'none' | 'free' | 'pro'>('none')
+
+  useEffect(() => {
+    async function checkAuth() {
+      const supabase = createClient()
+      const { data: { user } } = await supabase.auth.getUser()
+
+      if (!user) {
+        setUserStatus('none')
+        return
+      }
+
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('subscription_status')
+        .eq('id', user.id)
+        .single()
+
+      setUserStatus(profile?.subscription_status || 'free')
+    }
+
+    checkAuth()
+  }, [])
+
+  const { data, isLoading } = useSWR<{ games: APIGame[]; date: string }>("/api/mlb/schedule", fetcher, {
 
   // Date navigation
   const currentDate = useMemo(() => {
@@ -138,6 +166,23 @@ export function WeatherPageClient() {
 
   // Transform live data or fall back to static
   const liveGames = data?.games ?? []
+  const allWeatherData: StadiumWeather[] = isToday && liveGames.length > 0
+    ? transformToWeatherData(liveGames)
+    : stadiumWeatherData
+
+  const isLive = isToday && liveGames.length > 0
+
+  // Limit rows based on subscription status
+  const weatherData = limitRows(allWeatherData, userStatus)
+
+  const baseDate = new Date()
+  const currentDate = new Date(baseDate)
+  currentDate.setDate(currentDate.getDate() + dateOffset)
+  const dateLabel = currentDate.toLocaleDateString("en-US", {
+    weekday: "short",
+    month: "short",
+    day: "numeric",
+  })
   const weatherData: StadiumWeather[] = liveGames.length > 0
     ? transformToWeatherData(liveGames)
     : stadiumWeatherData
@@ -268,7 +313,9 @@ export function WeatherPageClient() {
             <span className="text-sm">Loading live weather data...</span>
           </div>
         ) : (
-          <WeatherTable data={weatherData} />
+          <RowLimiter userStatus={userStatus} totalRows={allWeatherData.length}>
+            <WeatherTable data={weatherData} />
+          </RowLimiter>
         )}
       </main>
     </div>

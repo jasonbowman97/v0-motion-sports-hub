@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useMemo } from "react"
+import { useState, useMemo, useEffect } from "react"
 import Link from "next/link"
 import useSWR from "swr"
 import { BarChart3, ChevronLeft, ChevronRight, Calendar, Loader2 } from "lucide-react"
@@ -8,6 +8,15 @@ import { Button } from "@/components/ui/button"
 import { NrfiTable } from "@/components/mlb/nrfi-table"
 import { nrfiPitchers } from "@/lib/nrfi-data"
 import type { NrfiPitcher } from "@/lib/nrfi-data"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
+import { RowLimiter, limitRows } from "@/components/row-limiter"
+import { createClient } from "@/lib/supabase/client"
 
 interface APIGame {
   gamePk: number
@@ -68,6 +77,46 @@ type HandFilter = "All" | "RHP" | "LHP"
 export default function NrfiPage() {
   const [handFilter, setHandFilter] = useState<HandFilter>("All")
   const [dateOffset, setDateOffset] = useState(0)
+  const [yearFilter, setYearFilter] = useState("2025")
+  const [userStatus, setUserStatus] = useState<'none' | 'free' | 'pro'>('none')
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    async function checkAuth() {
+      const supabase = createClient()
+      const { data: { user } } = await supabase.auth.getUser()
+
+      if (!user) {
+        setUserStatus('none')
+        setLoading(false)
+        return
+      }
+
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('subscription_status')
+        .eq('id', user.id)
+        .single()
+
+      setUserStatus(profile?.subscription_status || 'free')
+      setLoading(false)
+    }
+
+    checkAuth()
+  }, [])
+
+  const { data, isLoading } = useSWR<{ games: APIGame[]; date: string }>("/api/mlb/schedule", fetcher, {
+    revalidateOnFocus: false,
+    dedupingInterval: 3600000,
+  })
+
+  const isToday = dateOffset === 0
+  const liveGames = data?.games ?? []
+  const liveNrfi = useMemo(() => (liveGames.length > 0 ? transformToNrfi(liveGames) : []), [liveGames])
+  const isLive = isToday && liveNrfi.length > 0
+
+  // Use live probable pitchers for today, static for other dates
+  const basePitchers = isLive ? liveNrfi : nrfiPitchers
 
   // Date navigation
   const currentDate = useMemo(() => {
@@ -82,6 +131,7 @@ export default function NrfiPage() {
     day: "numeric",
   })
 
+  // Filter by pitcher hand (only for pro users)
   const { data, isLoading } = useSWR<{ games: APIGame[]; date: string }>(`/api/mlb/schedule?date=${dateParam}`, fetcher, {
     revalidateOnFocus: false,
     dedupingInterval: 3600000,
@@ -98,10 +148,19 @@ export default function NrfiPage() {
 
   // Filter by pitcher hand
   const filteredData = useMemo(() => {
-    if (handFilter === "All") return basePitchers
-    const hand = handFilter === "RHP" ? "R" : "L"
-    return basePitchers.filter((p) => p.hand === hand)
-  }, [handFilter, basePitchers])
+    let data = basePitchers
+
+    // Only apply filters for pro users
+    if (userStatus === 'pro') {
+      if (handFilter !== "All") {
+        const hand = handFilter === "RHP" ? "R" : "L"
+        data = data.filter((p) => p.hand === hand)
+      }
+    }
+
+    // Limit rows based on subscription status
+    return limitRows(data, userStatus)
+  }, [handFilter, basePitchers, userStatus])
 
   return (
     <div className="min-h-screen bg-background">
@@ -208,6 +267,21 @@ export default function NrfiPage() {
             </button>
           </div>
 
+          {/* Year selector */}
+          <Select value={yearFilter} onValueChange={setYearFilter} disabled={userStatus !== 'pro'}>
+            <SelectTrigger className="w-[100px] h-9 text-xs bg-card border-border disabled:opacity-50 disabled:cursor-not-allowed">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="2025">2025</SelectItem>
+              <SelectItem value="2024">2024</SelectItem>
+              <SelectItem value="2023">2023</SelectItem>
+            </SelectContent>
+          </Select>
+
+          {/* Divider */}
+          <div className="hidden sm:block h-6 w-px bg-border" />
+
           {/* Pitcher hand filter */}
           <div className="flex items-center gap-3">
             <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Pitcher</span>
@@ -215,8 +289,9 @@ export default function NrfiPage() {
               {(["All", "RHP", "LHP"] as const).map((hand) => (
                 <button
                   key={hand}
-                  onClick={() => setHandFilter(hand)}
-                  className={`px-3.5 py-1.5 text-xs font-semibold transition-colors ${
+                  onClick={() => userStatus === 'pro' && setHandFilter(hand)}
+                  disabled={userStatus !== 'pro'}
+                  className={`px-3.5 py-1.5 text-xs font-semibold transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${
                     handFilter === hand
                       ? "bg-primary text-primary-foreground"
                       : "bg-card text-muted-foreground hover:text-foreground"
@@ -242,7 +317,9 @@ export default function NrfiPage() {
         </div>
 
         {/* Data table */}
-        <NrfiTable data={filteredData} />
+        <RowLimiter userStatus={userStatus} totalRows={basePitchers.length}>
+          <NrfiTable data={filteredData} />
+        </RowLimiter>
       </main>
     </div>
   )

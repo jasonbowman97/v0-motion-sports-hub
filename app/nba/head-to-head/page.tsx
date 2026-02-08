@@ -15,6 +15,24 @@ import { H2HInjuries } from "@/components/nba/h2h-injuries"
 
 const fetcher = (url: string) => fetch(url).then((r) => r.json())
 
+const emptyMomentum: NBAGame["awayMomentum"] = {
+  trend: "Steady",
+  streak: "N/A",
+  streakType: "W",
+  last5: { wins: 0, losses: 0 },
+  last10: { wins: 0, losses: 0 },
+  ppg: 0,
+  oppPpg: 0,
+  atsRecord: "N/A",
+  ouRecord: "N/A",
+  homeRecord: "N/A",
+  homePpg: 0,
+  awayRecord: "N/A",
+  awayPpg: 0,
+}
+
+const emptyDefense: NBAGame["awayDefense"] = { pg: 0, sg: 0, sf: 0, pf: 0, c: 0 }
+
 function espnToH2HGames(espnGames: NBAScheduleGame[]): NBAGame[] {
   return espnGames.map((g) => {
     const time = new Date(g.date).toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit", hour12: true })
@@ -29,11 +47,11 @@ function espnToH2HGames(espnGames: NBAScheduleGame[]): NBAGame[] {
       venue: g.venue,
       awayInjuries: [],
       homeInjuries: [],
-      h2hHistory: { record: "N/A", awayAvgPts: 0, homeAvgPts: 0, avgTotal: 0, margin: "N/A", meetings: [] },
-      awayMomentum: { trend: "Neutral" as const, streak: "N/A", l5: "N/A", l10: "N/A", l5Dots: [], l10Dots: [], ppg: 0, oppPpg: 0, ats: "N/A", ou: "N/A", homeRecord: "N/A", homePpg: 0, awayRecord: "N/A", awayPpg: 0 },
-      homeMomentum: { trend: "Neutral" as const, streak: "N/A", l5: "N/A", l10: "N/A", l5Dots: [], l10Dots: [], ppg: 0, oppPpg: 0, ats: "N/A", ou: "N/A", homeRecord: "N/A", homePpg: 0, awayRecord: "N/A", awayPpg: 0 },
-      awayDefense: [],
-      homeDefense: [],
+      h2hHistory: { record: "N/A", awayAvgPts: 0, homeAvgPts: 0, avgTotal: 0, margin: "N/A", recentMeetings: [] },
+      awayMomentum: { ...emptyMomentum },
+      homeMomentum: { ...emptyMomentum },
+      awayDefense: { ...emptyDefense },
+      homeDefense: { ...emptyDefense },
     }
   })
 }

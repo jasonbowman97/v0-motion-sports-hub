@@ -51,7 +51,6 @@ function filterByBatterHand(playerList: Player[], hand: BatterHandFilter): Playe
 
 export default function Page() {
   const [selectedPlayer, setSelectedPlayer] = useState<Player | null>(null)
-  const players = staticPlayers; // Declare the players variable
 
   // Live data
   const { data: liveData } = useSWR<{ leaders: BattingLeader[] }>("/api/mlb/batting", fetcher, {

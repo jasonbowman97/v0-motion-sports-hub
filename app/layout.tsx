@@ -1,6 +1,5 @@
 import React from "react"
 import type { Metadata, Viewport } from 'next'
-import { CookieConsent } from '@/components/shared/cookie-consent'
 import { generateSEO } from '@/lib/seo'
 
 import './globals.css'
@@ -38,7 +37,6 @@ export default function RootLayout({
     <html lang="en">
       <body className="font-sans antialiased">
         {children}
-        <CookieConsent />
       </body>
     </html>
   )

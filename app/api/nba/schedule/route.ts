@@ -1,6 +1,7 @@
 import { getNBAScoreboard } from "@/lib/nba-api"
 import { NextResponse } from "next/server"
 
+export const dynamic = 'force-dynamic'
 export const revalidate = 300
 
 export async function GET(request: Request) {

@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useMemo } from "react"
+import { useState, useMemo, useEffect } from "react"
 import useSWR from "swr"
 import type { Player } from "@/lib/players-data"
 import { players as staticPlayers } from "@/lib/players-data"
@@ -13,6 +13,8 @@ import { PlayerDetail } from "@/components/player-detail"
 import { TimeRangeFilter, type TimeRange } from "@/components/time-range-filter"
 import { Switch } from "@/components/ui/switch"
 import type { BattingLeader } from "@/lib/mlb-api"
+import { PaywallBanner } from "@/components/paywall-banner"
+import { createClient } from "@/lib/supabase/client"
 
 const fetcher = (url: string) => fetch(url).then((r) => r.json())
 
@@ -48,6 +50,33 @@ function filterByBatterHand(playerList: Player[], hand: BatterHandFilter): Playe
 
 export default function Page() {
   const [selectedPlayer, setSelectedPlayer] = useState<Player | null>(null)
+  const [userStatus, setUserStatus] = useState<'none' | 'free' | 'pro'>('none')
+
+  useEffect(() => {
+    async function checkAuth() {
+      const supabase = createClient()
+      const { data: { user } } = await supabase.auth.getUser()
+
+      if (!user) {
+        setUserStatus('none')
+        return
+      }
+
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('subscription_status')
+        .eq('id', user.id)
+        .single()
+
+      setUserStatus(profile?.subscription_status || 'free')
+    }
+
+    checkAuth()
+  }, [])
+
+  if (userStatus !== 'pro') {
+    return <PaywallBanner userStatus={userStatus} dashboardName="MLB Hitting Stats" />
+  }
 
   // Live data
   const { data: liveData } = useSWR<{ leaders: BattingLeader[] }>("/api/mlb/batting", fetcher, {

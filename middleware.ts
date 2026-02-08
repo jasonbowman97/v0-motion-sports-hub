@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
+import { updateSession } from './lib/supabase/middleware'
 
 // Rate limiting store (in-memory, consider Redis for production)
 const rateLimit = new Map<string, { count: number; resetTime: number }>()
@@ -41,8 +42,11 @@ setInterval(() => {
   }
 }, RATE_LIMIT_WINDOW)
 
-export function middleware(request: NextRequest) {
-  const response = NextResponse.next()
+export async function middleware(request: NextRequest) {
+  // Update Supabase session first
+  const supabaseResponse = await updateSession(request)
+
+  const response = supabaseResponse
 
   // Apply rate limiting to API routes
   if (request.nextUrl.pathname.startsWith('/api/')) {
@@ -76,12 +80,12 @@ export function middleware(request: NextRequest) {
   // Content Security Policy
   const csp = [
     "default-src 'self'",
-    "script-src 'self' 'unsafe-eval' 'unsafe-inline' https://vercel.live",
+    "script-src 'self' 'unsafe-eval' 'unsafe-inline' https://vercel.live https://js.stripe.com",
     "style-src 'self' 'unsafe-inline'",
     "img-src 'self' data: https: blob:",
     "font-src 'self' data:",
-    "connect-src 'self' https://api.espn.com https://statsapi.mlb.com https://*.vercel.app https://vercel.live wss://ws-us3.pusher.com",
-    "frame-src 'self' https://vercel.live",
+    "connect-src 'self' https://api.espn.com https://statsapi.mlb.com https://*.vercel.app https://vercel.live wss://ws-us3.pusher.com https://*.supabase.co https://api.stripe.com",
+    "frame-src 'self' https://vercel.live https://js.stripe.com https://hooks.stripe.com",
     "media-src 'self'",
     "object-src 'none'",
     "base-uri 'self'",

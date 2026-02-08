@@ -17,6 +17,7 @@ import {
   getHeatmapClass,
 } from "@/lib/nba-first-basket-data"
 import { useMemo } from "react"
+import { RowLimiter, limitRows } from "@/components/row-limiter"
 
 interface FirstBasketTableProps {
   timeFrame: TimeFrame
@@ -24,6 +25,7 @@ interface FirstBasketTableProps {
   sortColumn: string
   sortDirection: "asc" | "desc"
   onSort: (column: string) => void
+  userStatus?: 'none' | 'free' | 'pro'
 }
 
 type MergedRow = NBAPlayer & FirstBasketStats
@@ -41,8 +43,9 @@ export function FirstBasketTable({
   sortColumn,
   sortDirection,
   onSort,
+  userStatus = 'none',
 }: FirstBasketTableProps) {
-  const rows = useMemo(() => {
+  const { rows, totalRows } = useMemo(() => {
     let filtered = nbaPlayers
     if (gameFilter !== "all") {
       // Filter by specific game - match by team
@@ -79,8 +82,11 @@ export function FirstBasketTable({
       return sortDirection === "asc" ? aVal - bVal : bVal - aVal
     })
 
-    return merged
-  }, [timeFrame, gameFilter, sortColumn, sortDirection])
+    const totalRows = merged.length
+    const limitedRows = limitRows(merged, userStatus)
+
+    return { rows: limitedRows, totalRows }
+  }, [timeFrame, gameFilter, sortColumn, sortDirection, userStatus])
 
   // Bounds for heatmap columns
   const bounds = useMemo(() => {
@@ -108,9 +114,10 @@ export function FirstBasketTable({
   ]
 
   return (
-    <div className="rounded-xl border border-border bg-card overflow-hidden">
-      <div className="overflow-x-auto">
-        <Table>
+    <RowLimiter userStatus={userStatus} totalRows={totalRows}>
+      <div className="rounded-xl border border-border bg-card overflow-hidden">
+        <div className="overflow-x-auto">
+          <Table>
           <TableHeader>
             <TableRow className="border-b border-border hover:bg-transparent">
               {columns.map((col) => (
@@ -224,8 +231,9 @@ export function FirstBasketTable({
               </TableRow>
             )}
           </TableBody>
-        </Table>
+          </Table>
+        </div>
       </div>
-    </div>
+    </RowLimiter>
   )
 }

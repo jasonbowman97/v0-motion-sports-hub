@@ -2,13 +2,52 @@ import Link from "next/link"
 import { BarChart3 } from "lucide-react"
 import { TrendsDashboard } from "@/components/trends/trends-dashboard"
 import { nbaTrends, nbaCategories } from "@/lib/nba-trends-data"
+import { getNBALeaders } from "@/lib/nba-api"
+import { buildTrends } from "@/lib/trends-builder"
 
 export const metadata = {
   title: "HeatCheck HQ - NBA Trends",
   description: "Hot and cold streaks for NBA players across scoring, threes, rebounds, and assists.",
 }
 
-export default function NBATrendsPage() {
+const CATEGORY_MAP: Record<string, { name: string; statLabel: string; hotPrefix: string; coldPrefix: string }> = {
+  points: { name: "Scoring", statLabel: "PPG", hotPrefix: "Averaging", coldPrefix: "Only" },
+  threePointFieldGoalsMade: { name: "Threes", statLabel: "3PM/G", hotPrefix: "Hitting", coldPrefix: "Cold at" },
+  rebounds: { name: "Rebounds", statLabel: "RPG", hotPrefix: "Grabbing", coldPrefix: "Only" },
+  assists: { name: "Assists", statLabel: "APG", hotPrefix: "Dishing", coldPrefix: "Just" },
+}
+
+async function getLiveTrends() {
+  try {
+    const espnCategories = await getNBALeaders()
+    if (!espnCategories.length) return null
+    const categoryInputs = Object.entries(CATEGORY_MAP)
+      .map(([espnName, config]) => {
+        const cat = espnCategories.find((c) => c.name === espnName)
+        if (!cat) return null
+        return {
+          config,
+          leaders: cat.leaders.slice(0, 15).map((l) => ({
+            id: l.athlete.id,
+            name: l.athlete.displayName,
+            team: l.athlete.team?.abbreviation ?? "???",
+            position: l.athlete.position?.abbreviation ?? "??",
+            value: l.value,
+            displayValue: l.displayValue,
+          })),
+        }
+      })
+      .filter(Boolean) as Parameters<typeof buildTrends>[0]
+    return buildTrends(categoryInputs, "nba")
+  } catch {
+    return null
+  }
+}
+
+export default async function NBATrendsPage() {
+  const liveTrends = await getLiveTrends()
+  const trends = liveTrends ?? nbaTrends
+  const isLive = !!liveTrends
   return (
     <div className="min-h-screen bg-background">
       <header className="border-b border-border bg-card/50 backdrop-blur-sm sticky top-0 z-50">
@@ -48,10 +87,11 @@ export default function NBATrendsPage() {
 
       <main className="mx-auto max-w-[1440px] px-6 py-8">
         <TrendsDashboard
-          trends={nbaTrends}
+          trends={trends}
           categories={nbaCategories}
           title="NBA Hot & Cold Trends"
           subtitle="Players on notable streaks based on recent game performance. Spot edges in scoring, three-point shooting, rebounding, and assist consistency."
+          isLive={isLive}
         />
       </main>
     </div>

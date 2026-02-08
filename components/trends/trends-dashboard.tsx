@@ -10,9 +10,10 @@ interface TrendsDashboardProps {
   categories: string[]
   title: string
   subtitle: string
+  isLive?: boolean
 }
 
-export function TrendsDashboard({ trends, categories, title, subtitle }: TrendsDashboardProps) {
+export function TrendsDashboard({ trends, categories, title, subtitle, isLive }: TrendsDashboardProps) {
   const [activeFilter, setActiveFilter] = useState<"all" | "hot" | "cold">("all")
   const [activeCategory, setActiveCategory] = useState<string>("All")
 
@@ -36,7 +37,14 @@ export function TrendsDashboard({ trends, categories, title, subtitle }: TrendsD
     <div className="flex flex-col gap-6">
       {/* Title area */}
       <div>
-        <h2 className="text-xl font-bold text-foreground">{title}</h2>
+        <div className="flex items-center gap-3">
+          <h2 className="text-xl font-bold text-foreground">{title}</h2>
+          {isLive && (
+            <span className="text-[10px] font-semibold uppercase tracking-wider text-emerald-400 bg-emerald-400/10 px-2 py-0.5 rounded-md">
+              Live
+            </span>
+          )}
+        </div>
         <p className="text-sm text-muted-foreground mt-1">{subtitle}</p>
       </div>
 

@@ -101,6 +101,27 @@ export async function getNFLTeams(): Promise<NFLTeamRecord[]> {
 }
 
 /* ------------------------------------------------------------------ */
+/*  Leaders (for trends)                                               */
+/* ------------------------------------------------------------------ */
+
+export interface NFLLeaderEntry {
+  athlete: { id: string; displayName: string; position: { abbreviation: string }; team: { abbreviation: string } }
+  value: number
+  displayValue: string
+}
+
+export interface NFLLeaderCategory {
+  name: string
+  displayName: string
+  leaders: NFLLeaderEntry[]
+}
+
+export async function getNFLLeaders(): Promise<NFLLeaderCategory[]> {
+  const raw = await espnFetch<{ leaders: NFLLeaderCategory[] }>("/leaders")
+  return raw.leaders ?? []
+}
+
+/* ------------------------------------------------------------------ */
 /*  ESPN response shapes (internal)                                    */
 /* ------------------------------------------------------------------ */
 

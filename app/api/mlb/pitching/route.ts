@@ -1,7 +1,7 @@
 import { getPitchingLeaders } from "@/lib/mlb-api"
 import { NextResponse } from "next/server"
 
-export const revalidate = 86400
+export const revalidate = 3600
 
 export async function GET() {
   try {

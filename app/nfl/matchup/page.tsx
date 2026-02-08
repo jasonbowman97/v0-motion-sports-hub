@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect, useCallback } from "react"
+import { useState, useMemo, useCallback } from "react"
 import useSWR from "swr"
 import { NFLHeader } from "@/components/nfl/nfl-header"
 import { TeamStatsComparison } from "@/components/nfl/team-stats-comparison"
@@ -15,37 +15,44 @@ const fetcher = (url: string) => fetch(url).then((r) => r.json())
 /*  Convert live ESPN data → existing component shapes                 */
 /* ------------------------------------------------------------------ */
 
-const GAMES_PLAYED = 17 // regular season divisor
-
 function liveToMatchup(live: LiveMatchup): NFLMatchup {
   function buildPassers(team: LiveMatchup["awayTeam"]) {
-    return team.passers.map((p) => ({
-      name: p.name,
-      position: p.position || "QB",
-      yardsPerGame: Math.round(((p.passing?.yards ?? 0) / GAMES_PLAYED) * 10) / 10,
-      tdsPerGame: Math.round(((p.passing?.touchdowns ?? 0) / GAMES_PLAYED) * 10) / 10,
-      gameLogs: [] as { yards: number; secondary: number }[],
-    }))
+    return team.passers.map((p) => {
+      const gp = p.gamesPlayed || 1
+      return {
+        name: p.name,
+        position: p.position || "QB",
+        yardsPerGame: Math.round(((p.passing?.yards ?? 0) / gp) * 10) / 10,
+        tdsPerGame: Math.round(((p.passing?.touchdowns ?? 0) / gp) * 10) / 10,
+        gameLogs: [] as { yards: number; secondary: number }[],
+      }
+    })
   }
 
   function buildRushers(team: LiveMatchup["awayTeam"]) {
-    return team.rushers.map((p) => ({
-      name: p.name,
-      position: p.position || "RB",
-      yardsPerGame: Math.round(((p.rushing?.yards ?? 0) / GAMES_PLAYED) * 10) / 10,
-      attemptsPerGame: Math.round(((p.rushing?.attempts ?? 0) / GAMES_PLAYED) * 10) / 10,
-      gameLogs: [] as { yards: number; secondary: number }[],
-    }))
+    return team.rushers.map((p) => {
+      const gp = p.gamesPlayed || 1
+      return {
+        name: p.name,
+        position: p.position || "RB",
+        yardsPerGame: Math.round(((p.rushing?.yards ?? 0) / gp) * 10) / 10,
+        attemptsPerGame: Math.round(((p.rushing?.attempts ?? 0) / gp) * 10) / 10,
+        gameLogs: [] as { yards: number; secondary: number }[],
+      }
+    })
   }
 
   function buildReceivers(team: LiveMatchup["awayTeam"]) {
-    return team.receivers.map((p) => ({
-      name: p.name,
-      position: p.position || "WR",
-      yardsPerGame: Math.round(((p.receiving?.yards ?? 0) / GAMES_PLAYED) * 10) / 10,
-      targetsPerGame: Math.round(((p.receiving?.targets ?? 0) / GAMES_PLAYED) * 10) / 10,
-      gameLogs: [] as { yards: number; secondary: number }[],
-    }))
+    return team.receivers.map((p) => {
+      const gp = p.gamesPlayed || 1
+      return {
+        name: p.name,
+        position: p.position || "WR",
+        yardsPerGame: Math.round(((p.receiving?.yards ?? 0) / gp) * 10) / 10,
+        targetsPerGame: Math.round(((p.receiving?.targets ?? 0) / gp) * 10) / 10,
+        gameLogs: [] as { yards: number; secondary: number }[],
+      }
+    })
   }
 
   const blankStats = {
@@ -110,22 +117,16 @@ export default function NFLMatchupPage() {
     { revalidateOnFocus: false, dedupingInterval: 3600000 }
   )
 
-  const liveGames: GameOption[] = scheduleData?.games ?? []
+  const liveGames = useMemo<GameOption[]>(() => scheduleData?.games ?? [], [scheduleData])
   const hasLiveGames = liveGames.length > 0
 
-  // Selected game ID
+  // Selected game ID — default to first live game when available
   const [selectedGameId, setSelectedGameId] = useState<string | null>(null)
   const [selectedStaticIdx, setSelectedStaticIdx] = useState(0)
-
-  // Auto-select first live game when available
-  useEffect(() => {
-    if (hasLiveGames && !selectedGameId) {
-      setSelectedGameId(liveGames[0].id)
-    }
-  }, [hasLiveGames, liveGames, selectedGameId])
+  const effectiveGameId = selectedGameId ?? (hasLiveGames ? liveGames[0].id : null)
 
   // Fetch matchup data for selected game
-  const matchupUrl = selectedGameId ? `/api/nfl/matchup?gameId=${selectedGameId}` : null
+  const matchupUrl = effectiveGameId ? `/api/nfl/matchup?gameId=${effectiveGameId}` : null
   const { data: matchupData, isLoading: matchupLoading } = useSWR<{ matchup: LiveMatchup | null }>(
     hasLiveGames ? matchupUrl : null,
     fetcher,
@@ -164,7 +165,7 @@ export default function NFLMatchupPage() {
                   key={g.id}
                   onClick={() => selectGame(g.id)}
                   className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors ${
-                    selectedGameId === g.id
+                    effectiveGameId === g.id
                       ? "bg-primary text-primary-foreground"
                       : "bg-card border border-border text-muted-foreground hover:text-foreground hover:border-primary/30"
                   }`}

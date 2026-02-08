@@ -8,13 +8,6 @@ import { Button } from "@/components/ui/button"
 import { NrfiTable } from "@/components/mlb/nrfi-table"
 import { nrfiPitchers } from "@/lib/nrfi-data"
 import type { NrfiPitcher } from "@/lib/nrfi-data"
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select"
 
 interface APIGame {
   gamePk: number
@@ -75,30 +68,33 @@ type HandFilter = "All" | "RHP" | "LHP"
 export default function NrfiPage() {
   const [handFilter, setHandFilter] = useState<HandFilter>("All")
   const [dateOffset, setDateOffset] = useState(0)
-  const [yearFilter, setYearFilter] = useState("2025")
-
-  const { data, isLoading } = useSWR<{ games: APIGame[]; date: string }>("/api/mlb/schedule", fetcher, {
-    revalidateOnFocus: false,
-    dedupingInterval: 3600000,
-  })
-
-  const isToday = dateOffset === 0
-  const liveGames = data?.games ?? []
-  const liveNrfi = useMemo(() => (liveGames.length > 0 ? transformToNrfi(liveGames) : []), [liveGames])
-  const isLive = isToday && liveNrfi.length > 0
-
-  // Use live probable pitchers for today, static for other dates
-  const basePitchers = isLive ? liveNrfi : nrfiPitchers
 
   // Date navigation
-  const baseDate = new Date()
-  const currentDate = new Date(baseDate)
-  currentDate.setDate(currentDate.getDate() + dateOffset)
+  const currentDate = useMemo(() => {
+    const d = new Date()
+    d.setDate(d.getDate() + dateOffset)
+    return d
+  }, [dateOffset])
+  const dateParam = currentDate.toISOString().slice(0, 10)
   const dateLabel = currentDate.toLocaleDateString("en-US", {
     weekday: "short",
     month: "short",
     day: "numeric",
   })
+
+  const { data, isLoading } = useSWR<{ games: APIGame[]; date: string }>(`/api/mlb/schedule?date=${dateParam}`, fetcher, {
+    revalidateOnFocus: false,
+    dedupingInterval: 3600000,
+  })
+
+  const liveNrfi = useMemo(() => {
+    const games = data?.games ?? []
+    return games.length > 0 ? transformToNrfi(games) : []
+  }, [data])
+  const isLive = liveNrfi.length > 0
+
+  // Use live probable pitchers when available, static as fallback
+  const basePitchers = isLive ? liveNrfi : nrfiPitchers
 
   // Filter by pitcher hand
   const filteredData = useMemo(() => {
@@ -172,7 +168,7 @@ export default function NrfiPage() {
         <div className="flex flex-col gap-1">
           <div className="flex items-center gap-3">
             <h1 className="text-2xl font-bold text-foreground text-balance">No Run First Inning</h1>
-            {isLoading && isToday && <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />}
+            {isLoading && <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />}
             {isLive && (
               <span className="text-[10px] font-semibold uppercase tracking-wider text-emerald-400 bg-emerald-400/10 px-2 py-0.5 rounded-md">
                 Live
@@ -211,21 +207,6 @@ export default function NrfiPage() {
               <ChevronRight className="h-4 w-4" />
             </button>
           </div>
-
-          {/* Year selector */}
-          <Select value={yearFilter} onValueChange={setYearFilter}>
-            <SelectTrigger className="w-[100px] h-9 text-xs bg-card border-border">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="2025">2025</SelectItem>
-              <SelectItem value="2024">2024</SelectItem>
-              <SelectItem value="2023">2023</SelectItem>
-            </SelectContent>
-          </Select>
-
-          {/* Divider */}
-          <div className="hidden sm:block h-6 w-px bg-border" />
 
           {/* Pitcher hand filter */}
           <div className="flex items-center gap-3">

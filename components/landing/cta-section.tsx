@@ -22,21 +22,16 @@ export function CtaSection() {
                 Data-driven insight tools across MLB, NBA, and NFL.
                 Create a free account and start exploring.
               </p>
-              <div className="flex flex-col items-center gap-3 sm:flex-row">
-                <Button
-                  size="lg"
-                  className="bg-primary text-primary-foreground hover:bg-primary/90 h-12 px-8"
-                  asChild
-                >
-                  <Link href="/mlb/hitting-stats">
-                    Get started free
-                    <ArrowRight className="ml-2 h-4 w-4" />
-                  </Link>
-                </Button>
-                <span className="text-xs text-muted-foreground">
-                  Free forever -- no credit card needed
-                </span>
-              </div>
+              <Button
+                size="lg"
+                className="bg-primary text-primary-foreground hover:bg-primary/90 h-12 px-8"
+                asChild
+              >
+                <Link href="/mlb/hitting-stats">
+                  Get started
+                  <ArrowRight className="ml-2 h-4 w-4" />
+                </Link>
+              </Button>
             </div>
           </div>
         </FadeIn>

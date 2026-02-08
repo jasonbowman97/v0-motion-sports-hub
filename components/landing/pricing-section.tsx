@@ -1,5 +1,5 @@
 import Link from "next/link"
-import { Check, X, Database, BarChart3, SlidersHorizontal } from "lucide-react"
+import { Check, X } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { FadeIn } from "@/components/ui/fade-in"
 
@@ -40,26 +40,6 @@ const plans = [
   },
 ]
 
-const proFeatures = [
-  {
-    icon: Database,
-    title: "Real-Time Data Access",
-    description:
-      "Drill down into detailed stats with customizable filters for every sport.",
-  },
-  {
-    icon: BarChart3,
-    title: "Comprehensive Player & Team Analytics",
-    description:
-      "Stay ahead with instant updates on player performance, team dynamics, and live game data.",
-  },
-  {
-    icon: SlidersHorizontal,
-    title: "Custom Metrics & Views",
-    description:
-      "Tailor the data to your process with flexible metrics, sorting, and breakdowns.",
-  },
-]
 
 export function PricingSection() {
   return (
@@ -140,22 +120,7 @@ export function PricingSection() {
           ))}
         </div>
 
-        {/* Pro feature highlights */}
-        <div className="mx-auto mt-16 grid max-w-4xl gap-6 sm:grid-cols-3">
-          {proFeatures.map((feature, index) => (
-            <FadeIn key={feature.title} delay={0.3 + index * 0.1}>
-              <div className="flex flex-col items-center gap-3 text-center">
-                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10 text-primary">
-                  <feature.icon className="h-5 w-5" />
-                </div>
-                <h3 className="text-sm font-semibold text-foreground">{feature.title}</h3>
-                <p className="text-xs leading-relaxed text-muted-foreground">
-                  {feature.description}
-                </p>
-              </div>
-            </FadeIn>
-          ))}
-        </div>
+
       </div>
     </section>
   )

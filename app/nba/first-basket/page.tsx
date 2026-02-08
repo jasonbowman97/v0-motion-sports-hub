@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useCallback, useMemo } from "react"
+import { useState, useCallback, useMemo, useEffect } from "react"
 import useSWR from "swr"
 import { Loader2 } from "lucide-react"
 import { NBAHeader } from "@/components/nba/nba-header"
@@ -15,6 +15,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
+import { createClient } from "@/lib/supabase/client"
 
 const fetcher = (url: string) => fetch(url).then((r) => r.json())
 
@@ -36,6 +37,32 @@ export default function NBAFirstBasketPage() {
   const [timeFrame, setTimeFrame] = useState<TimeFrame>("season")
   const [sortColumn, setSortColumn] = useState("firstBasketPerGmPct")
   const [sortDirection, setSortDirection] = useState<"asc" | "desc">("desc")
+  const [userStatus, setUserStatus] = useState<'none' | 'free' | 'pro'>('none')
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    async function checkAuth() {
+      const supabase = createClient()
+      const { data: { user } } = await supabase.auth.getUser()
+
+      if (!user) {
+        setUserStatus('none')
+        setLoading(false)
+        return
+      }
+
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('subscription_status')
+        .eq('id', user.id)
+        .single()
+
+      setUserStatus(profile?.subscription_status || 'free')
+      setLoading(false)
+    }
+
+    checkAuth()
+  }, [])
 
   const dateParam = `${date.getFullYear()}${String(date.getMonth() + 1).padStart(2, "0")}${String(date.getDate()).padStart(2, "0")}`
   const { data, isLoading } = useSWR<{ games: NBAScheduleGame[] }>(
@@ -100,8 +127,8 @@ export default function NBAFirstBasketPage() {
 
           {/* Matchup filter */}
           <div className="flex items-center gap-2">
-            <Select value={gameFilter} onValueChange={setGameFilter}>
-              <SelectTrigger className="w-[180px] h-9 bg-card border-border text-sm">
+            <Select value={gameFilter} onValueChange={setGameFilter} disabled={userStatus !== 'pro'}>
+              <SelectTrigger className="w-[180px] h-9 bg-card border-border text-sm disabled:opacity-50 disabled:cursor-not-allowed">
                 <SelectValue placeholder="All Matchups" />
               </SelectTrigger>
               <SelectContent>
@@ -128,8 +155,9 @@ export default function NBAFirstBasketPage() {
               ).map((option) => (
                 <button
                   key={option.key}
-                  onClick={() => setTimeFrame(option.key)}
-                  className={`px-3.5 py-1.5 text-xs font-semibold transition-colors ${
+                  onClick={() => userStatus === 'pro' && setTimeFrame(option.key)}
+                  disabled={userStatus !== 'pro'}
+                  className={`px-3.5 py-1.5 text-xs font-semibold transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${
                     timeFrame === option.key
                       ? "bg-primary text-primary-foreground"
                       : "bg-card text-muted-foreground hover:text-foreground"
@@ -149,11 +177,13 @@ export default function NBAFirstBasketPage() {
             <button
               key={game.id}
               onClick={() =>
+                userStatus === 'pro' &&
                 setGameFilter((prev) =>
                   prev === `${game.away}-${game.home}` ? "all" : `${game.away}-${game.home}`
                 )
               }
-              className={`inline-flex items-center rounded-md px-3 py-1.5 text-xs font-medium transition-colors ${
+              disabled={userStatus !== 'pro'}
+              className={`inline-flex items-center rounded-md px-3 py-1.5 text-xs font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${
                 gameFilter === `${game.away}-${game.home}`
                   ? "bg-primary/15 text-primary border border-primary/30"
                   : "bg-secondary text-muted-foreground hover:text-foreground border border-transparent"
@@ -171,6 +201,7 @@ export default function NBAFirstBasketPage() {
           sortColumn={sortColumn}
           sortDirection={sortDirection}
           onSort={handleSort}
+          userStatus={userStatus}
         />
       </main>
     </div>

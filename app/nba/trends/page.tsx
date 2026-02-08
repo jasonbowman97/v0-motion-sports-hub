@@ -3,6 +3,8 @@ import { BarChart3 } from "lucide-react"
 import { TrendsDashboard } from "@/components/trends/trends-dashboard"
 import { nbaTrends, nbaCategories } from "@/lib/nba-trends-data"
 import { getNBAStreakTrends } from "@/lib/nba-streaks"
+import { PaywallBanner } from "@/components/paywall-banner"
+import { getSubscriptionStatus } from "@/lib/auth/actions"
 
 export const metadata = {
   title: "HeatCheck HQ - NBA Active Streaks",
@@ -19,9 +21,11 @@ async function getLiveTrends() {
 }
 
 export default async function NBATrendsPage() {
+  const userStatus = await getSubscriptionStatus()
   const liveTrends = await getLiveTrends()
   const trends = liveTrends ?? nbaTrends
   const isLive = !!liveTrends
+
   return (
     <div className="min-h-screen bg-background">
       <header className="border-b border-border bg-card/50 backdrop-blur-sm sticky top-0 z-50">
@@ -60,13 +64,17 @@ export default async function NBATrendsPage() {
       </header>
 
       <main className="mx-auto max-w-[1440px] px-6 py-8">
-        <TrendsDashboard
-          trends={trends}
-          categories={nbaCategories}
-          title="NBA Active Streaks"
-          subtitle="Players on active hot and cold streaks based on recent game-by-game performance. Identifies patterns like '7 straight games with 25+ points' or '5 straight double-doubles' to spot current form."
-          isLive={isLive}
-        />
+        {userStatus === 'pro' ? (
+          <TrendsDashboard
+            trends={trends}
+            categories={nbaCategories}
+            title="NBA Active Streaks"
+            subtitle="Players on active hot and cold streaks based on recent game-by-game performance. Identifies patterns like '7 straight games with 25+ points' or '5 straight double-doubles' to spot current form."
+            isLive={isLive}
+          />
+        ) : (
+          <PaywallBanner userStatus={userStatus as 'none' | 'free' | 'pro'} dashboardName="NBA Trends" />
+        )}
       </main>
     </div>
   )

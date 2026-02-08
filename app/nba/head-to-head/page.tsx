@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useMemo } from "react"
+import { useState, useMemo, useEffect } from "react"
 import Link from "next/link"
 import useSWR from "swr"
 import { BarChart3, Loader2 } from "lucide-react"
@@ -12,6 +12,8 @@ import { H2HHistory } from "@/components/nba/h2h-history"
 import { H2HMomentum } from "@/components/nba/h2h-momentum"
 import { H2HDefense } from "@/components/nba/h2h-defense"
 import { H2HInjuries } from "@/components/nba/h2h-injuries"
+import { PaywallBanner } from "@/components/paywall-banner"
+import { createClient } from "@/lib/supabase/client"
 
 const fetcher = (url: string) => fetch(url).then((r) => r.json())
 
@@ -57,6 +59,30 @@ function espnToH2HGames(espnGames: NBAScheduleGame[]): NBAGame[] {
 }
 
 export default function NBAH2HPage() {
+  const [userStatus, setUserStatus] = useState<'none' | 'free' | 'pro'>('none')
+
+  useEffect(() => {
+    async function checkAuth() {
+      const supabase = createClient()
+      const { data: { user } } = await supabase.auth.getUser()
+
+      if (!user) {
+        setUserStatus('none')
+        return
+      }
+
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('subscription_status')
+        .eq('id', user.id)
+        .single()
+
+      setUserStatus(profile?.subscription_status || 'free')
+    }
+
+    checkAuth()
+  }, [])
+
   const { data, isLoading } = useSWR<{ games: NBAScheduleGame[] }>("/api/nba/schedule", fetcher, {
     revalidateOnFocus: false,
     dedupingInterval: 3600000,
@@ -74,6 +100,10 @@ export default function NBAH2HPage() {
   const selectedGame = staticGames.find((g) => g.id === activeId)
     ?? allGames.find((g) => g.id === activeId)
     ?? allGames[0]
+
+  if (userStatus !== 'pro') {
+    return <PaywallBanner userStatus={userStatus} dashboardName="NBA Head-to-Head" />
+  }
 
   return (
     <div className="min-h-screen bg-background">

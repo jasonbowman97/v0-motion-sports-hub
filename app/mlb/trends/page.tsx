@@ -4,7 +4,8 @@ import { TrendsDashboard } from "@/components/trends/trends-dashboard"
 import { mlbTrends, mlbCategories } from "@/lib/mlb-trends-data"
 import { getMLBStreakTrends } from "@/lib/mlb-streaks"
 
-export const revalidate = 3600
+export const dynamic = 'force-dynamic'
+export const revalidate = 0
 
 export const metadata = {
   title: "HeatCheck HQ - MLB Active Streaks",

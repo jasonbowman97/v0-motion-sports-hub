@@ -20,8 +20,6 @@ import type {
    1.  BATTING LEADERS → Hitting Stats dashboard
    ════════════════════════════════════════════ */
 export async function getMLBBattingLeaders(): Promise<NormalizedBatter[]> {
-  "use cache"
-
   try {
     const raw = await fetchMLBLeaders()
     const categories = (raw as Record<string, unknown[]>).categories ?? []
@@ -94,8 +92,6 @@ export async function getMLBBattingLeaders(): Promise<NormalizedBatter[]> {
    2.  PITCHING LEADERS → Pitching Stats dashboard
    ════════════════════════════════════════════ */
 export async function getMLBPitchingLeaders(): Promise<NormalizedPitcher[]> {
-  "use cache"
-
   try {
     const raw = await fetchMLBLeaders()
     const categories = (raw as Record<string, unknown[]>).categories ?? []
@@ -173,8 +169,6 @@ export async function getMLBPitchingLeaders(): Promise<NormalizedPitcher[]> {
    3.  SCOREBOARD → Weather + NRFI dashboards
    ════════════════════════════════════════════ */
 export async function getMLBScoreboard(date?: string) {
-  "use cache"
-
   try {
     const raw = await fetchMLBScoreboard(date)
     const events = (raw as Record<string, unknown[]>).events ?? []
@@ -187,8 +181,6 @@ export async function getMLBScoreboard(date?: string) {
 
 /** Extract weather data from scoreboard for the Weather dashboard */
 export async function getMLBWeather(date?: string): Promise<NormalizedGameWeather[]> {
-  "use cache"
-
   try {
     const { events } = await getMLBScoreboard(date)
     const games: NormalizedGameWeather[] = []
@@ -230,8 +222,6 @@ export async function getMLBWeather(date?: string): Promise<NormalizedGameWeathe
 
 /** Extract probable starters from scoreboard for the NRFI dashboard */
 export async function getMLBProbableStarters(date?: string): Promise<NormalizedProbableStarter[]> {
-  "use cache"
-
   try {
     const { events } = await getMLBScoreboard(date)
     const starters: NormalizedProbableStarter[] = []
@@ -291,8 +281,6 @@ export interface GameLogEntry {
 }
 
 export async function getPlayerGameLog(athleteId: string): Promise<GameLogEntry[]> {
-  "use cache"
-
   try {
     const raw = await fetchAthleteGameLog(athleteId)
     // The gamelog endpoint returns a complex nested structure.

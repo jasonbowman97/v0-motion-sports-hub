@@ -2,45 +2,19 @@ import Link from "next/link"
 import { BarChart3 } from "lucide-react"
 import { TrendsDashboard } from "@/components/trends/trends-dashboard"
 import { nflTrends, nflCategories } from "@/lib/nfl-trends-data"
-import { getNFLLeaders } from "@/lib/nfl-api"
-import { buildTrends } from "@/lib/trends-builder"
+import { getNFLStreakTrends } from "@/lib/nfl-streaks"
 
 export const revalidate = 3600
 
 export const metadata = {
-  title: "HeatCheck HQ - NFL Trends",
-  description: "Hot and cold streaks for NFL players across passing, rushing, receiving, and touchdowns.",
-}
-
-const CATEGORY_MAP: Record<string, { name: string; statLabel: string; hotPrefix: string; coldPrefix: string }> = {
-  passingYards: { name: "Passing", statLabel: "Pass YDS", hotPrefix: "Throwing for", coldPrefix: "Only" },
-  rushingYards: { name: "Rushing", statLabel: "Rush YDS", hotPrefix: "Running for", coldPrefix: "Just" },
-  receivingYards: { name: "Receiving", statLabel: "Rec YDS", hotPrefix: "Racking up", coldPrefix: "Only" },
-  totalTouchdowns: { name: "Touchdowns", statLabel: "TD", hotPrefix: "Scoring", coldPrefix: "Just" },
+  title: "HeatCheck HQ - NFL Active Streaks",
+  description: "Active passing, rushing, and receiving streaks for NFL players based on recent game-by-game performance.",
 }
 
 async function getLiveTrends() {
   try {
-    const espnCategories = await getNFLLeaders()
-    if (!espnCategories.length) return null
-    const categoryInputs = Object.entries(CATEGORY_MAP)
-      .map(([espnName, config]) => {
-        const cat = espnCategories.find((c) => c.name === espnName)
-        if (!cat) return null
-        return {
-          config,
-          leaders: cat.leaders.slice(0, 15).map((l) => ({
-            id: l.athlete.id,
-            name: l.athlete.displayName,
-            team: l.athlete.team?.abbreviation ?? "???",
-            position: l.athlete.position?.abbreviation ?? "??",
-            value: l.value,
-            displayValue: l.displayValue,
-          })),
-        }
-      })
-      .filter(Boolean) as Parameters<typeof buildTrends>[0]
-    return buildTrends(categoryInputs, "nfl")
+    const trends = await getNFLStreakTrends()
+    return trends.length > 0 ? trends : null
   } catch {
     return null
   }
@@ -90,8 +64,8 @@ export default async function NFLTrendsPage() {
         <TrendsDashboard
           trends={trends}
           categories={nflCategories}
-          title="NFL Hot & Cold Trends"
-          subtitle="Players on notable streaks based on recent game performance. Find edges in passing yards, rushing production, receiving consistency, and touchdown scoring."
+          title="NFL Active Streaks"
+          subtitle="Players on active hot and cold streaks based on recent game-by-game performance. Identifies patterns like '3 straight games with 300+ pass yards' or '5 straight games with a rushing TD' to spot current form."
           isLive={isLive}
         />
       </main>

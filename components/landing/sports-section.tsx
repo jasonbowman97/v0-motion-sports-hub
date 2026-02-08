@@ -1,5 +1,6 @@
 import { Activity, Crosshair, Flame, ArrowRight } from "lucide-react"
 import Link from "next/link"
+import { FadeIn } from "@/components/ui/fade-in"
 
 const sports = [
   {
@@ -47,25 +48,25 @@ export function SportsSection() {
   return (
     <section id="dashboards" className="py-20 md:py-32">
       <div className="mx-auto max-w-7xl px-6">
-        <div className="text-center mb-16">
-          <span className="text-xs font-semibold uppercase tracking-widest text-primary">
-            Dashboards
-          </span>
-          <h2 className="mt-3 text-3xl font-bold tracking-tight text-foreground text-balance md:text-4xl">
-            9 dashboards. 3 trend trackers. Zero fluff.
-          </h2>
-          <p className="mx-auto mt-4 max-w-xl text-muted-foreground">
-            Every sport gets purpose-built dashboards tailored to its unique
-            data points and the edges that actually matter.
-          </p>
-        </div>
+        <FadeIn>
+          <div className="text-center mb-16">
+            <span className="text-xs font-semibold uppercase tracking-widest text-primary">
+              Dashboards
+            </span>
+            <h2 className="mt-3 text-3xl font-bold tracking-tight text-foreground text-balance md:text-4xl">
+              9 dashboards. 3 trend trackers. Zero fluff.
+            </h2>
+            <p className="mx-auto mt-4 max-w-xl text-muted-foreground">
+              Every sport gets purpose-built dashboards tailored to its unique
+              data points and the edges that actually matter.
+            </p>
+          </div>
+        </FadeIn>
 
         <div className="grid gap-8 lg:grid-cols-3">
-          {sports.map((sport) => (
-            <div
-              key={sport.name}
-              className="flex flex-col rounded-xl border border-border bg-card overflow-hidden"
-            >
+          {sports.map((sport, index) => (
+            <FadeIn key={sport.name} delay={0.1 + index * 0.1}>
+              <div className="flex flex-col rounded-xl border border-border bg-card overflow-hidden h-full">
               {/* Sport header */}
               <div className="p-6 pb-4">
                 <div className="flex items-center gap-3 mb-4">
@@ -107,7 +108,8 @@ export function SportsSection() {
                   </Link>
                 ))}
               </div>
-            </div>
+              </div>
+            </FadeIn>
           ))}
         </div>
       </div>

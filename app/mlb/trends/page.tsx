@@ -2,45 +2,19 @@ import Link from "next/link"
 import { BarChart3 } from "lucide-react"
 import { TrendsDashboard } from "@/components/trends/trends-dashboard"
 import { mlbTrends, mlbCategories } from "@/lib/mlb-trends-data"
-import { getBattingLeaders, getPitchingLeaders } from "@/lib/mlb-api"
-import { buildTrends } from "@/lib/trends-builder"
+import { getMLBStreakTrends } from "@/lib/mlb-streaks"
 
 export const revalidate = 3600
 
 export const metadata = {
-  title: "HeatCheck HQ - MLB Trends",
-  description: "Hot and cold streaks for MLB players across hitting, power, pitching, and on-base performance.",
+  title: "HeatCheck HQ - MLB Active Streaks",
+  description: "Active hitting and pitching streaks for MLB players. Identify hot hands and cold slumps based on recent game-by-game performance.",
 }
 
 async function getLiveTrends() {
   try {
-    const [batters, pitchers] = await Promise.all([getBattingLeaders(), getPitchingLeaders()])
-    if (!batters.length && !pitchers.length) return null
-    return buildTrends(
-      [
-        {
-          config: { name: "Hitting", statLabel: "AVG", hotPrefix: "Batting", coldPrefix: "Slumping at" },
-          leaders: batters.filter((b) => b.atBats >= 50).sort((a, b) => b.avg - a.avg)
-            .map((b) => ({ id: String(b.id), name: b.name, team: b.team, position: b.pos, value: b.avg, displayValue: b.avg.toFixed(3) })),
-        },
-        {
-          config: { name: "Power", statLabel: "HR", hotPrefix: "Leading with", coldPrefix: "Only" },
-          leaders: batters.filter((b) => b.atBats >= 50).sort((a, b) => b.homeRuns - a.homeRuns)
-            .map((b) => ({ id: String(b.id), name: b.name, team: b.team, position: b.pos, value: b.homeRuns, displayValue: String(b.homeRuns) })),
-        },
-        {
-          config: { name: "Pitching", statLabel: "ERA", hotPrefix: "Elite", coldPrefix: "Struggling with", lowerIsBetter: true },
-          leaders: pitchers.filter((p) => p.inningsPitched >= 20).sort((a, b) => a.era - b.era)
-            .map((p) => ({ id: String(p.id), name: p.name, team: p.team, position: "SP", value: p.era, displayValue: p.era.toFixed(2) })),
-        },
-        {
-          config: { name: "On Base", statLabel: "OBP", hotPrefix: "Leading with", coldPrefix: "Low" },
-          leaders: batters.filter((b) => b.atBats >= 50).sort((a, b) => b.obp - a.obp)
-            .map((b) => ({ id: String(b.id), name: b.name, team: b.team, position: b.pos, value: b.obp, displayValue: b.obp.toFixed(3) })),
-        },
-      ],
-      "mlb"
-    )
+    const trends = await getMLBStreakTrends()
+    return trends.length > 0 ? trends : null
   } catch {
     return null
   }
@@ -97,8 +71,8 @@ export default async function MLBTrendsPage() {
         <TrendsDashboard
           trends={trends}
           categories={mlbCategories}
-          title="MLB Hot & Cold Trends"
-          subtitle="Players on notable streaks based on recent game performance. Identify edges from consistent patterns in hitting, power, pitching, and on-base stats."
+          title="MLB Active Streaks"
+          subtitle="Players on active hot and cold streaks based on recent game-by-game performance. Identifies patterns like '9 hits in last 10 games' or '5 straight quality starts' to spot current form, not just season totals."
           isLive={isLive}
         />
       </main>

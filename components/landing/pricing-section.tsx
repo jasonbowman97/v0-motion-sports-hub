@@ -12,7 +12,6 @@ const plans = [
     cta: "Get started free",
     ctaVariant: "outline" as const,
     highlights: [
-      { text: "All 3 sports (MLB, NBA, NFL)", included: true },
       { text: "Limited view of charts and tables", included: true },
       { text: "Basic trend overview", included: true },
       { text: "Full dashboard access", included: false },

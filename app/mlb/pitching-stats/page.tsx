@@ -8,6 +8,7 @@ import { pitchers as staticPitchers } from "@/lib/pitching-data"
 import type { PitcherStats } from "@/lib/pitching-data"
 import { PitchingTable } from "@/components/mlb/pitching-table"
 import { PitcherArsenal } from "@/components/mlb/pitcher-arsenal"
+import { FullPageLock } from "@/components/paywall/full-page-lock"
 import type { PitchingLeader } from "@/lib/mlb-api"
 
 const fetcher = (url: string) => fetch(url).then((r) => r.json())
@@ -96,6 +97,7 @@ export default function PitchingStatsPage() {
         </div>
       </header>
 
+      <FullPageLock dashboardName="Pitching Stats">
       <main className="mx-auto max-w-[1440px] px-6 py-8 flex flex-col gap-6">
         {selectedPitcher ? (
           <PitcherArsenal pitcher={selectedPitcher} onBack={() => setSelectedPitcher(null)} />
@@ -140,6 +142,7 @@ export default function PitchingStatsPage() {
           </>
         )}
       </main>
+      </FullPageLock>
     </div>
   )
 }

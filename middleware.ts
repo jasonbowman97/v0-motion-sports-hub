@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
+import { updateSession } from '@/lib/supabase/middleware'
 
 // Rate limiting store (in-memory, consider Redis for production)
 const rateLimit = new Map<string, { count: number; resetTime: number }>()
@@ -41,8 +42,11 @@ setInterval(() => {
   }
 }, RATE_LIMIT_WINDOW)
 
-export function middleware(request: NextRequest) {
-  const response = NextResponse.next()
+export async function middleware(request: NextRequest) {
+  // Refresh Supabase auth session
+  const supabaseResponse = await updateSession(request)
+
+  const response = supabaseResponse
 
   // Apply rate limiting to API routes
   if (request.nextUrl.pathname.startsWith('/api/')) {
@@ -80,7 +84,7 @@ export function middleware(request: NextRequest) {
     "style-src 'self' 'unsafe-inline'",
     "img-src 'self' data: https: blob:",
     "font-src 'self' data:",
-    "connect-src 'self' https://api.espn.com https://statsapi.mlb.com https://*.vercel.app https://vercel.live wss://ws-us3.pusher.com",
+    "connect-src 'self' https://api.espn.com https://statsapi.mlb.com https://*.vercel.app https://vercel.live wss://ws-us3.pusher.com https://*.supabase.co",
     "frame-src 'self' https://vercel.live",
     "media-src 'self'",
     "object-src 'none'",
@@ -128,7 +132,18 @@ export function middleware(request: NextRequest) {
     return new NextResponse(null, { status: 200, headers })
   }
 
-  return NextResponse.next({ headers })
+  // Copy the security headers onto the Supabase response while preserving cookies
+  const finalResponse = NextResponse.next({ request })
+  // Copy cookies from supabase response
+  supabaseResponse.cookies.getAll().forEach(cookie => {
+    finalResponse.cookies.set(cookie.name, cookie.value)
+  })
+  // Apply security headers
+  headers.forEach((value, key) => {
+    finalResponse.headers.set(key, value)
+  })
+
+  return finalResponse
 }
 
 export const config = {

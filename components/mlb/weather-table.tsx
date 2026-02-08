@@ -90,7 +90,7 @@ function SortButton({ field, label, activeField, activeDir, onSort }: {
   )
 }
 
-export function WeatherTable({ data }: { data: StadiumWeather[] }) {
+export function WeatherTable({ data, maxRows }: { data: StadiumWeather[]; maxRows?: number }) {
   const [sortField, setSortField] = useState<SortField>("runsImpact")
   const [sortDir, setSortDir] = useState<SortDir>("desc")
 
@@ -110,6 +110,8 @@ export function WeatherTable({ data }: { data: StadiumWeather[] }) {
       return sortDir === "desc" ? bv - av : av - bv
     })
   }, [data, sortField, sortDir])
+
+  const displayRows = maxRows != null ? sorted.slice(0, maxRows) : sorted
 
   return (
     <div className="rounded-xl border border-border bg-card overflow-hidden">
@@ -152,7 +154,7 @@ export function WeatherTable({ data }: { data: StadiumWeather[] }) {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {sorted.map((stadium) => {
+            {displayRows.map((stadium) => {
               const runsBg =
                 stadium.runsImpact >= 10
                   ? "bg-emerald-500/8"

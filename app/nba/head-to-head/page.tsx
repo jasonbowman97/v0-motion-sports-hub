@@ -8,6 +8,7 @@ import { nbaGames as staticGames } from "@/lib/nba-h2h-data"
 import type { NBAGame } from "@/lib/nba-h2h-data"
 import type { NBAScheduleGame, NBATeamSummary } from "@/lib/nba-api"
 import type { InjuredPlayer } from "@/lib/nba-h2h-data"
+import { FullPageLock } from "@/components/paywall/full-page-lock"
 import { H2HMatchupSelector } from "@/components/nba/h2h-matchup-selector"
 import { H2HHistory } from "@/components/nba/h2h-history"
 import { H2HMomentum } from "@/components/nba/h2h-momentum"
@@ -162,6 +163,7 @@ export default function NBAH2HPage() {
         </div>
       </header>
 
+      <FullPageLock dashboardName="NBA Head-to-Head">
       <main className="mx-auto max-w-[1440px] px-6 py-8">
         <div className="mb-8">
           <div className="flex items-center gap-3">
@@ -190,6 +192,7 @@ export default function NBAH2HPage() {
           <H2HInjuries game={selectedGame} />
         </div>
       </main>
+      </FullPageLock>
     </div>
   )
 }

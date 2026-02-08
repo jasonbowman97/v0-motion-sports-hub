@@ -44,18 +44,22 @@ setInterval(() => {
 
 export async function middleware(request: NextRequest) {
   // Refresh Supabase auth session
-  const supabaseResponse = await updateSession(request)
-
-  const response = supabaseResponse
+  let supabaseResponse: NextResponse
+  try {
+    supabaseResponse = await updateSession(request)
+  } catch {
+    // If Supabase fails (e.g. env vars missing), continue without session
+    supabaseResponse = NextResponse.next({ request })
+  }
 
   // Apply rate limiting to API routes
   if (request.nextUrl.pathname.startsWith('/api/')) {
     const key = getRateLimitKey(request)
     const { allowed, remaining } = checkRateLimit(key)
 
-    response.headers.set('X-RateLimit-Limit', RATE_LIMIT_MAX_REQUESTS.toString())
-    response.headers.set('X-RateLimit-Remaining', remaining.toString())
-    response.headers.set('X-RateLimit-Reset', (Date.now() + RATE_LIMIT_WINDOW).toString())
+    supabaseResponse.headers.set('X-RateLimit-Limit', RATE_LIMIT_MAX_REQUESTS.toString())
+    supabaseResponse.headers.set('X-RateLimit-Remaining', remaining.toString())
+    supabaseResponse.headers.set('X-RateLimit-Reset', (Date.now() + RATE_LIMIT_WINDOW).toString())
 
     if (!allowed) {
       return new NextResponse(
@@ -74,10 +78,7 @@ export async function middleware(request: NextRequest) {
     }
   }
 
-  // Security Headers
-  const headers = new Headers(response.headers)
-
-  // Content Security Policy
+  // Security Headers — apply directly to the supabaseResponse to preserve cookies
   const csp = [
     "default-src 'self'",
     "script-src 'self' 'unsafe-eval' 'unsafe-inline' https://vercel.live",
@@ -94,56 +95,31 @@ export async function middleware(request: NextRequest) {
     "upgrade-insecure-requests",
   ].join('; ')
 
-  headers.set('Content-Security-Policy', csp)
-
-  // Strict Transport Security (HSTS)
-  headers.set('Strict-Transport-Security', 'max-age=63072000; includeSubDomains; preload')
-
-  // Prevent clickjacking
-  headers.set('X-Frame-Options', 'DENY')
-
-  // Prevent MIME type sniffing
-  headers.set('X-Content-Type-Options', 'nosniff')
-
-  // XSS Protection (legacy but still useful)
-  headers.set('X-XSS-Protection', '1; mode=block')
-
-  // Referrer Policy
-  headers.set('Referrer-Policy', 'strict-origin-when-cross-origin')
-
-  // Permissions Policy (formerly Feature Policy)
-  headers.set(
+  supabaseResponse.headers.set('Content-Security-Policy', csp)
+  supabaseResponse.headers.set('Strict-Transport-Security', 'max-age=63072000; includeSubDomains; preload')
+  supabaseResponse.headers.set('X-Frame-Options', 'DENY')
+  supabaseResponse.headers.set('X-Content-Type-Options', 'nosniff')
+  supabaseResponse.headers.set('X-XSS-Protection', '1; mode=block')
+  supabaseResponse.headers.set('Referrer-Policy', 'strict-origin-when-cross-origin')
+  supabaseResponse.headers.set(
     'Permissions-Policy',
     'camera=(), microphone=(), geolocation=(), interest-cohort=()'
   )
-
-  // Remove server header
-  headers.delete('X-Powered-By')
+  supabaseResponse.headers.delete('X-Powered-By')
 
   // CORS headers for API routes
   if (request.nextUrl.pathname.startsWith('/api/')) {
-    headers.set('Access-Control-Allow-Origin', '*')
-    headers.set('Access-Control-Allow-Methods', 'GET, OPTIONS')
-    headers.set('Access-Control-Allow-Headers', 'Content-Type, Authorization')
+    supabaseResponse.headers.set('Access-Control-Allow-Origin', '*')
+    supabaseResponse.headers.set('Access-Control-Allow-Methods', 'GET, OPTIONS')
+    supabaseResponse.headers.set('Access-Control-Allow-Headers', 'Content-Type, Authorization')
   }
 
   // Handle preflight requests
   if (request.method === 'OPTIONS') {
-    return new NextResponse(null, { status: 200, headers })
+    return new NextResponse(null, { status: 200, headers: supabaseResponse.headers })
   }
 
-  // Copy the security headers onto the Supabase response while preserving cookies
-  const finalResponse = NextResponse.next({ request })
-  // Copy cookies from supabase response
-  supabaseResponse.cookies.getAll().forEach(cookie => {
-    finalResponse.cookies.set(cookie.name, cookie.value)
-  })
-  // Apply security headers
-  headers.forEach((value, key) => {
-    finalResponse.headers.set(key, value)
-  })
-
-  return finalResponse
+  return supabaseResponse
 }
 
 export const config = {

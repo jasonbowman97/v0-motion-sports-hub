@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useMemo } from "react"
+import { useState, useMemo, useEffect } from "react"
 import useSWR from "swr"
 import { NFLHeader } from "@/components/nfl/nfl-header"
 import { TeamStatsComparison } from "@/components/nfl/team-stats-comparison"
@@ -11,10 +11,21 @@ import { ChevronLeft, ChevronRight, Calendar, Loader2 } from "lucide-react"
 
 const fetcher = (url: string) => fetch(url).then((r) => r.json())
 
+// Use a stable date string for initial SSR to avoid hydration mismatch
+function getStableToday() {
+  const d = new Date()
+  return new Date(d.getFullYear(), d.getMonth(), d.getDate())
+}
+
 export default function NFLMatchupPage() {
   const staticMatchups = getAllMatchups()
   const [selectedMatchup, setSelectedMatchup] = useState<NFLMatchup>(staticMatchups[0])
-  const [currentDate, setCurrentDate] = useState(new Date())
+  const [currentDate, setCurrentDate] = useState<Date | null>(null)
+
+  // Initialize date on client only to avoid hydration mismatch
+  useEffect(() => {
+    setCurrentDate(getStableToday())
+  }, [])
 
   const { data, isLoading } = useSWR<{ games: NFLScheduleGame[] }>("/api/nfl/schedule", fetcher, {
     revalidateOnFocus: false,
@@ -25,15 +36,14 @@ export default function NFLMatchupPage() {
   const isLive = liveGames.length > 0
   const weekLabel = liveGames[0]?.week || ""
 
-  const dateStr = currentDate.toLocaleDateString("en-US", {
-    weekday: "short",
-    month: "short",
-    day: "numeric",
-  })
+  const dateStr = currentDate
+    ? currentDate.toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" })
+    : ""
 
   function shiftDate(days: number) {
     setCurrentDate((d) => {
-      const next = new Date(d)
+      const base = d ?? getStableToday()
+      const next = new Date(base)
       next.setDate(next.getDate() + days)
       return next
     })
@@ -120,13 +130,18 @@ export default function NFLMatchupPage() {
 
         {/* Matchup Header */}
         <div className="flex flex-col gap-1">
-          <h2 className="text-xl font-bold text-foreground text-balance">
-            {selectedMatchup.away.name}{" "}
-            <span className="text-muted-foreground font-normal">@</span>{" "}
-            {selectedMatchup.home.name}
-          </h2>
+          <div className="flex items-center gap-3">
+            <h2 className="text-xl font-bold text-foreground text-balance">
+              {selectedMatchup.away.name}{" "}
+              <span className="text-muted-foreground font-normal">@</span>{" "}
+              {selectedMatchup.home.name}
+            </h2>
+            <span className="text-[10px] font-medium uppercase tracking-wider text-amber-400 bg-amber-400/10 px-2 py-0.5 rounded-md">
+              Cached
+            </span>
+          </div>
           <p className="text-sm text-muted-foreground">
-            {selectedMatchup.dateTime} -- {selectedMatchup.week}
+            {selectedMatchup.dateTime} -- {selectedMatchup.week}. Player stats are cached and refresh daily.
           </p>
         </div>
 

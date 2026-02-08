@@ -90,10 +90,10 @@ export const nflMatchups: NFLMatchup[] = [
         { name: "Jacardia Wright", position: "RB", yardsPerGame: 20, attemptsPerGame: 5, gameLogs: [{ yards: 20, secondary: 5 }] },
       ],
       receiving: [
-        { name: "DK Metcalf", position: "WR", yardsPerGame: 78.3, targetsPerGame: 8.2, gameLogs: [{ yards: 102, secondary: 6 }, { yards: 45, secondary: 5 }, { yards: 88, secondary: 9 }, { yards: 67, secondary: 7 }, { yards: 90, secondary: 11 }] },
-        { name: "Jaxon Smith-Njigba", position: "WR", yardsPerGame: 62.1, targetsPerGame: 7.4, gameLogs: [{ yards: 78, secondary: 5 }, { yards: 55, secondary: 8 }, { yards: 40, secondary: 6 }, { yards: 71, secondary: 8 }, { yards: 67, secondary: 10 }] },
-        { name: "Tyler Lockett", position: "WR", yardsPerGame: 38.5, targetsPerGame: 5.1, gameLogs: [{ yards: 42, secondary: 4 }, { yards: 30, secondary: 5 }, { yards: 51, secondary: 7 }, { yards: 28, secondary: 3 }, { yards: 41, secondary: 6 }] },
-        { name: "Noah Fant", position: "TE", yardsPerGame: 29.2, targetsPerGame: 3.8, gameLogs: [{ yards: 33, secondary: 3 }, { yards: 18, secondary: 2 }, { yards: 41, secondary: 5 }, { yards: 22, secondary: 4 }, { yards: 32, secondary: 5 }] },
+        { name: "Jaxon Smith-Njigba", position: "WR", yardsPerGame: 78.3, targetsPerGame: 8.2, gameLogs: [{ yards: 102, secondary: 6 }, { yards: 45, secondary: 5 }, { yards: 88, secondary: 9 }, { yards: 67, secondary: 7 }, { yards: 90, secondary: 11 }] },
+        { name: "Jake Bobo", position: "WR", yardsPerGame: 42.1, targetsPerGame: 5.4, gameLogs: [{ yards: 48, secondary: 5 }, { yards: 35, secondary: 4 }, { yards: 50, secondary: 6 }, { yards: 38, secondary: 5 }, { yards: 40, secondary: 7 }] },
+        { name: "Pharaoh Brown", position: "TE", yardsPerGame: 29.5, targetsPerGame: 3.9, gameLogs: [{ yards: 33, secondary: 3 }, { yards: 22, secondary: 2 }, { yards: 35, secondary: 5 }, { yards: 28, secondary: 4 }, { yards: 30, secondary: 5 }] },
+        { name: "Noah Fant", position: "TE", yardsPerGame: 25.2, targetsPerGame: 3.4, gameLogs: [{ yards: 28, secondary: 3 }, { yards: 18, secondary: 2 }, { yards: 30, secondary: 4 }, { yards: 22, secondary: 3 }, { yards: 28, secondary: 5 }] },
       ],
     },
     home: {

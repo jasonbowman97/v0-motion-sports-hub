@@ -1,7 +1,7 @@
 import { getSchedule } from "@/lib/mlb-api"
 import { NextResponse } from "next/server"
 
-export const revalidate = 86400
+export const revalidate = 300
 
 export async function GET(request: Request) {
   try {

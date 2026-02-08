@@ -4,6 +4,8 @@ import { TrendsDashboard } from "@/components/trends/trends-dashboard"
 import { mlbTrends, mlbCategories } from "@/lib/mlb-trends-data"
 import { getMLBStreakTrends } from "@/lib/mlb-streaks"
 
+export const revalidate = 3600
+
 export const metadata = {
   title: "HeatCheck HQ - MLB Active Streaks",
   description: "Active hitting and pitching streaks for MLB players. Identify hot hands and cold slumps based on recent game-by-game performance.",

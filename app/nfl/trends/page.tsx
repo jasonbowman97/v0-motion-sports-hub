@@ -4,6 +4,8 @@ import { TrendsDashboard } from "@/components/trends/trends-dashboard"
 import { nflTrends, nflCategories } from "@/lib/nfl-trends-data"
 import { getNFLStreakTrends } from "@/lib/nfl-streaks"
 
+export const revalidate = 3600
+
 export const metadata = {
   title: "HeatCheck HQ - NFL Active Streaks",
   description: "Active passing, rushing, and receiving streaks for NFL players based on recent game-by-game performance.",

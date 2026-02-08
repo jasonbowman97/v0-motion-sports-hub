@@ -4,6 +4,8 @@ import { TrendsDashboard } from "@/components/trends/trends-dashboard"
 import { nbaTrends, nbaCategories } from "@/lib/nba-trends-data"
 import { getNBAStreakTrends } from "@/lib/nba-streaks"
 
+export const revalidate = 3600
+
 export const metadata = {
   title: "HeatCheck HQ - NBA Active Streaks",
   description: "Active scoring, shooting, and all-around performance streaks for NBA players based on recent game-by-game data.",

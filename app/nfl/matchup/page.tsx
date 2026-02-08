@@ -3,7 +3,6 @@
 import { useState, useMemo, useCallback } from "react"
 import useSWR from "swr"
 import { NFLHeader } from "@/components/nfl/nfl-header"
-import { FullPageLock } from "@/components/paywall/full-page-lock"
 import { TeamStatsComparison } from "@/components/nfl/team-stats-comparison"
 import { PassingSection, RushingSection, ReceivingSection } from "@/components/nfl/positional-tables"
 import { getAllMatchups, type NFLMatchup } from "@/lib/nfl-matchup-data"
@@ -147,7 +146,6 @@ export default function NFLMatchupPage() {
     <div className="min-h-screen bg-background">
       <NFLHeader />
 
-      <FullPageLock dashboardName="NFL Matchup">
       <main className="mx-auto max-w-[1440px] px-6 py-6 flex flex-col gap-6">
         {/* Game Selector */}
         <div className="flex flex-col gap-4">
@@ -276,7 +274,6 @@ export default function NFLMatchupPage() {
           </>
         )}
       </main>
-      </FullPageLock>
     </div>
   )
 }

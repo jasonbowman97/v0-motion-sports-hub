@@ -24,7 +24,6 @@ type SortDir = "asc" | "desc"
 
 interface NrfiTableProps {
   data: NrfiPitcher[]
-  maxRows?: number
 }
 
 function SortButton({
@@ -60,7 +59,7 @@ function SortButton({
   )
 }
 
-export function NrfiTable({ data, maxRows }: NrfiTableProps) {
+export function NrfiTable({ data }: NrfiTableProps) {
   const [sortField, setSortField] = useState<SortField | null>("nrfiPct")
   const [sortDir, setSortDir] = useState<SortDir>("desc")
 
@@ -96,8 +95,6 @@ export function NrfiTable({ data, maxRows }: NrfiTableProps) {
       return sortDir === "asc" ? aVal - bVal : bVal - aVal
     })
   }, [data, sortField, sortDir])
-
-  const displayRows = maxRows != null ? sorted.slice(0, maxRows) : sorted
 
   return (
     <div className="rounded-xl border border-border bg-card overflow-hidden">
@@ -138,7 +135,7 @@ export function NrfiTable({ data, maxRows }: NrfiTableProps) {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {displayRows.map((pitcher) => (
+            {sorted.map((pitcher) => (
               <TableRow
                 key={pitcher.id}
                 className="border-b border-border/50 hover:bg-secondary/30 transition-colors"

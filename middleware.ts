@@ -1,6 +1,5 @@
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
-import { updateSession } from '@/lib/supabase/middleware'
 
 // Rate limiting store (in-memory, consider Redis for production)
 const rateLimit = new Map<string, { count: number; resetTime: number }>()
@@ -42,24 +41,17 @@ setInterval(() => {
   }
 }, RATE_LIMIT_WINDOW)
 
-export async function middleware(request: NextRequest) {
-  // Refresh Supabase auth session
-  let supabaseResponse: NextResponse
-  try {
-    supabaseResponse = await updateSession(request)
-  } catch {
-    // If Supabase fails (e.g. env vars missing), continue without session
-    supabaseResponse = NextResponse.next({ request })
-  }
+export function middleware(request: NextRequest) {
+  const response = NextResponse.next()
 
   // Apply rate limiting to API routes
   if (request.nextUrl.pathname.startsWith('/api/')) {
     const key = getRateLimitKey(request)
     const { allowed, remaining } = checkRateLimit(key)
 
-    supabaseResponse.headers.set('X-RateLimit-Limit', RATE_LIMIT_MAX_REQUESTS.toString())
-    supabaseResponse.headers.set('X-RateLimit-Remaining', remaining.toString())
-    supabaseResponse.headers.set('X-RateLimit-Reset', (Date.now() + RATE_LIMIT_WINDOW).toString())
+    response.headers.set('X-RateLimit-Limit', RATE_LIMIT_MAX_REQUESTS.toString())
+    response.headers.set('X-RateLimit-Remaining', remaining.toString())
+    response.headers.set('X-RateLimit-Reset', (Date.now() + RATE_LIMIT_WINDOW).toString())
 
     if (!allowed) {
       return new NextResponse(
@@ -78,14 +70,17 @@ export async function middleware(request: NextRequest) {
     }
   }
 
-  // Security Headers — apply directly to the supabaseResponse to preserve cookies
+  // Security Headers
+  const headers = new Headers(response.headers)
+
+  // Content Security Policy
   const csp = [
     "default-src 'self'",
     "script-src 'self' 'unsafe-eval' 'unsafe-inline' https://vercel.live",
     "style-src 'self' 'unsafe-inline'",
     "img-src 'self' data: https: blob:",
     "font-src 'self' data:",
-    "connect-src 'self' https://api.espn.com https://statsapi.mlb.com https://*.vercel.app https://vercel.live wss://ws-us3.pusher.com https://*.supabase.co",
+    "connect-src 'self' https://api.espn.com https://statsapi.mlb.com https://*.vercel.app https://vercel.live wss://ws-us3.pusher.com",
     "frame-src 'self' https://vercel.live",
     "media-src 'self'",
     "object-src 'none'",
@@ -95,31 +90,45 @@ export async function middleware(request: NextRequest) {
     "upgrade-insecure-requests",
   ].join('; ')
 
-  supabaseResponse.headers.set('Content-Security-Policy', csp)
-  supabaseResponse.headers.set('Strict-Transport-Security', 'max-age=63072000; includeSubDomains; preload')
-  supabaseResponse.headers.set('X-Frame-Options', 'DENY')
-  supabaseResponse.headers.set('X-Content-Type-Options', 'nosniff')
-  supabaseResponse.headers.set('X-XSS-Protection', '1; mode=block')
-  supabaseResponse.headers.set('Referrer-Policy', 'strict-origin-when-cross-origin')
-  supabaseResponse.headers.set(
+  headers.set('Content-Security-Policy', csp)
+
+  // Strict Transport Security (HSTS)
+  headers.set('Strict-Transport-Security', 'max-age=63072000; includeSubDomains; preload')
+
+  // Prevent clickjacking
+  headers.set('X-Frame-Options', 'DENY')
+
+  // Prevent MIME type sniffing
+  headers.set('X-Content-Type-Options', 'nosniff')
+
+  // XSS Protection (legacy but still useful)
+  headers.set('X-XSS-Protection', '1; mode=block')
+
+  // Referrer Policy
+  headers.set('Referrer-Policy', 'strict-origin-when-cross-origin')
+
+  // Permissions Policy (formerly Feature Policy)
+  headers.set(
     'Permissions-Policy',
     'camera=(), microphone=(), geolocation=(), interest-cohort=()'
   )
-  supabaseResponse.headers.delete('X-Powered-By')
+
+  // Remove server header
+  headers.delete('X-Powered-By')
 
   // CORS headers for API routes
   if (request.nextUrl.pathname.startsWith('/api/')) {
-    supabaseResponse.headers.set('Access-Control-Allow-Origin', '*')
-    supabaseResponse.headers.set('Access-Control-Allow-Methods', 'GET, OPTIONS')
-    supabaseResponse.headers.set('Access-Control-Allow-Headers', 'Content-Type, Authorization')
+    headers.set('Access-Control-Allow-Origin', '*')
+    headers.set('Access-Control-Allow-Methods', 'GET, OPTIONS')
+    headers.set('Access-Control-Allow-Headers', 'Content-Type, Authorization')
   }
 
   // Handle preflight requests
   if (request.method === 'OPTIONS') {
-    return new NextResponse(null, { status: 200, headers: supabaseResponse.headers })
+    return new NextResponse(null, { status: 200, headers })
   }
 
-  return supabaseResponse
+  return NextResponse.next({ headers })
 }
 
 export const config = {

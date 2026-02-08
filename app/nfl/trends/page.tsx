@@ -1,7 +1,6 @@
 import Link from "next/link"
 import { BarChart3 } from "lucide-react"
 import { TrendsDashboard } from "@/components/trends/trends-dashboard"
-import { FullPageLockWrapper } from "@/components/paywall/full-page-lock-wrapper"
 import { nflTrends, nflCategories } from "@/lib/nfl-trends-data"
 import { getNFLStreakTrends } from "@/lib/nfl-streaks"
 
@@ -62,7 +61,6 @@ export default async function NFLTrendsPage() {
         </div>
       </header>
 
-      <FullPageLockWrapper dashboardName="NFL Trends">
       <main className="mx-auto max-w-[1440px] px-6 py-8">
         <TrendsDashboard
           trends={trends}
@@ -72,7 +70,6 @@ export default async function NFLTrendsPage() {
           isLive={isLive}
         />
       </main>
-      </FullPageLockWrapper>
     </div>
   )
 }

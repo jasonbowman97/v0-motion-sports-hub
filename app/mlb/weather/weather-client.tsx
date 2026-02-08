@@ -7,8 +7,6 @@ import { BarChart3, ChevronLeft, ChevronRight, Calendar, Loader2 } from "lucide-
 import { Button } from "@/components/ui/button"
 import { WeatherTable } from "@/components/mlb/weather-table"
 import { stadiumWeatherData, type StadiumWeather } from "@/lib/mlb-weather-data"
-import { RowPaywall, getVisibleRowCount } from "@/components/paywall/row-paywall"
-import { useAuth } from "@/hooks/use-auth"
 
 /* ---------- park factors (simplified: venue keyword -> run multiplier) ---------- */
 const PARK_FACTORS: Record<string, number> = {
@@ -118,7 +116,6 @@ function transformToWeatherData(games: APIGame[]): StadiumWeather[] {
 const fetcher = (url: string) => fetch(url).then((r) => r.json())
 
 export function WeatherPageClient() {
-  const { tier } = useAuth()
   const [dateOffset, setDateOffset] = useState(0)
 
   // Date navigation
@@ -271,9 +268,7 @@ export function WeatherPageClient() {
             <span className="text-sm">Loading live weather data...</span>
           </div>
         ) : (
-          <RowPaywall totalRows={weatherData.length}>
-            <WeatherTable data={weatherData} maxRows={getVisibleRowCount(tier, weatherData.length)} />
-          </RowPaywall>
+          <WeatherTable data={weatherData} />
         )}
       </main>
     </div>

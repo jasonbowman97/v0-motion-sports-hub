@@ -6,8 +6,6 @@ import useSWR from "swr"
 import { BarChart3, ChevronLeft, ChevronRight, Calendar, Loader2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { NrfiTable } from "@/components/mlb/nrfi-table"
-import { RowPaywall, getVisibleRowCount } from "@/components/paywall/row-paywall"
-import { useAuth } from "@/hooks/use-auth"
 import { nrfiPitchers } from "@/lib/nrfi-data"
 import type { NrfiPitcher } from "@/lib/nrfi-data"
 
@@ -70,7 +68,6 @@ type HandFilter = "All" | "RHP" | "LHP"
 export default function NrfiPage() {
   const [handFilter, setHandFilter] = useState<HandFilter>("All")
   const [dateOffset, setDateOffset] = useState(0)
-  const { tier } = useAuth()
 
   // Date navigation
   const currentDate = useMemo(() => {
@@ -245,9 +242,7 @@ export default function NrfiPage() {
         </div>
 
         {/* Data table */}
-        <RowPaywall totalRows={filteredData.length}>
-          <NrfiTable data={filteredData} maxRows={getVisibleRowCount(tier, filteredData.length)} />
-        </RowPaywall>
+        <NrfiTable data={filteredData} />
       </main>
     </div>
   )

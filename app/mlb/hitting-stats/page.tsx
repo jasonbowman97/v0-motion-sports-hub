@@ -7,7 +7,6 @@ import { players as staticPlayers } from "@/lib/players-data"
 import type { Pitcher } from "@/lib/matchup-data"
 import { getTodayMatchup, aggregateBatterStats } from "@/lib/matchup-data"
 import { DashboardHeader } from "@/components/dashboard-header"
-import { FullPageLock } from "@/components/paywall/full-page-lock"
 import { MatchupPanel } from "@/components/matchup-panel"
 import { PlayersTable } from "@/components/players-table"
 import { PlayerDetail } from "@/components/player-detail"
@@ -120,7 +119,6 @@ export default function Page() {
   return (
     <div className="min-h-screen bg-background">
       <DashboardHeader />
-      <FullPageLock dashboardName="Hitting Stats">
       <main className="mx-auto max-w-[1600px] px-6 py-6">
         <div className="flex flex-col gap-6 lg:flex-row">
           {/* Left sidebar - Matchup Panel */}
@@ -250,7 +248,6 @@ export default function Page() {
           </div>
         </div>
       </main>
-      </FullPageLock>
     </div>
   )
 }

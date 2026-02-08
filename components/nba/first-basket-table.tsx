@@ -24,7 +24,6 @@ interface FirstBasketTableProps {
   sortColumn: string
   sortDirection: "asc" | "desc"
   onSort: (column: string) => void
-  maxRows?: number
 }
 
 type MergedRow = NBAPlayer & FirstBasketStats
@@ -42,7 +41,6 @@ export function FirstBasketTable({
   sortColumn,
   sortDirection,
   onSort,
-  maxRows,
 }: FirstBasketTableProps) {
   const rows = useMemo(() => {
     let filtered = nbaPlayers
@@ -83,8 +81,6 @@ export function FirstBasketTable({
 
     return merged
   }, [timeFrame, gameFilter, sortColumn, sortDirection])
-
-  const displayRows = maxRows != null ? rows.slice(0, maxRows) : rows
 
   // Bounds for heatmap columns
   const bounds = useMemo(() => {
@@ -138,7 +134,7 @@ export function FirstBasketTable({
             </TableRow>
           </TableHeader>
           <TableBody>
-            {displayRows.map((row) => (
+            {rows.map((row) => (
               <TableRow
                 key={row.id}
                 className="border-b border-border/50 hover:bg-secondary/50 transition-colors"

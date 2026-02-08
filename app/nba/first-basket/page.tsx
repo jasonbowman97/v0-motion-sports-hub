@@ -6,7 +6,7 @@ import { Loader2 } from "lucide-react"
 import { NBAHeader } from "@/components/nba/nba-header"
 import { DateNavigator } from "@/components/nba/date-navigator"
 import { FirstBasketTable } from "@/components/nba/first-basket-table"
-import { todayGames as staticGames, nbaPlayers, type TimeFrame } from "@/lib/nba-first-basket-data"
+import { todayGames as staticGames, type TimeFrame } from "@/lib/nba-first-basket-data"
 import type { NBAScheduleGame } from "@/lib/nba-api"
 import {
   Select,
@@ -15,8 +15,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import { RowPaywall, getVisibleRowCount } from "@/components/paywall/row-paywall"
-import { useAuth } from "@/hooks/use-auth"
 
 const fetcher = (url: string) => fetch(url).then((r) => r.json())
 
@@ -33,7 +31,6 @@ function toLiveGames(espnGames: NBAScheduleGame[]) {
 }
 
 export default function NBAFirstBasketPage() {
-  const { tier } = useAuth()
   const [date, setDate] = useState(new Date())
   const [gameFilter, setGameFilter] = useState("all")
   const [timeFrame, setTimeFrame] = useState<TimeFrame>("season")
@@ -168,16 +165,13 @@ export default function NBAFirstBasketPage() {
         </div>
 
         {/* Table */}
-        <RowPaywall totalRows={nbaPlayers.length}>
-          <FirstBasketTable
-            timeFrame={timeFrame}
-            gameFilter={gameFilter}
-            sortColumn={sortColumn}
-            sortDirection={sortDirection}
-            onSort={handleSort}
-            maxRows={getVisibleRowCount(tier, nbaPlayers.length)}
-          />
-        </RowPaywall>
+        <FirstBasketTable
+          timeFrame={timeFrame}
+          gameFilter={gameFilter}
+          sortColumn={sortColumn}
+          sortDirection={sortDirection}
+          onSort={handleSort}
+        />
       </main>
     </div>
   )

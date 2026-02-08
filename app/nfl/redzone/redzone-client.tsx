@@ -4,7 +4,6 @@ import Link from "next/link"
 import useSWR from "swr"
 import { BarChart3, Loader2 } from "lucide-react"
 import { RedzoneTable } from "@/components/nfl/redzone-table"
-import { FullPageLock } from "@/components/paywall/full-page-lock"
 import type { NFLScheduleGame } from "@/lib/nfl-api"
 
 const fetcher = (url: string) => fetch(url).then((r) => r.json())
@@ -56,7 +55,6 @@ export default function RedzoneClient() {
         </div>
       </header>
 
-      <FullPageLock dashboardName="NFL Redzone">
       <main className="mx-auto max-w-[1440px] px-6 py-8 flex flex-col gap-6">
         <div>
           <div className="flex items-center gap-3">
@@ -89,7 +87,6 @@ export default function RedzoneClient() {
 
         <RedzoneTable />
       </main>
-      </FullPageLock>
     </div>
   )
 }

@@ -16,11 +16,10 @@ export function CtaSection() {
 
             <div className="relative flex flex-col items-center gap-6 px-8 py-16 text-center md:py-24">
               <h2 className="max-w-2xl text-3xl font-bold tracking-tight text-foreground text-balance md:text-4xl">
-                12 dashboards. 3 sports. The edges are already there.
+                Start finding trends today
               </h2>
               <p className="max-w-lg text-muted-foreground">
-                NRFI streaks, first basket rankings, pitcher arsenals, H2H
-                breakdowns, and trend alerts -- all in one platform.
+                Data-driven insight tools across MLB, NBA, and NFL.
                 Create a free account and start exploring.
               </p>
               <div className="flex flex-col items-center gap-3 sm:flex-row">

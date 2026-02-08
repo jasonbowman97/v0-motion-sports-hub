@@ -1,5 +1,5 @@
 import Link from "next/link"
-import { Check, X } from "lucide-react"
+import { Check, X, Database, BarChart3, SlidersHorizontal } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { FadeIn } from "@/components/ui/fade-in"
 
@@ -8,40 +8,56 @@ const plans = [
     name: "Free",
     price: "$0",
     period: "forever",
-    description: "Explore the dashboards and see the data.",
-    cta: "Create free account",
+    description: "Preview the dashboards with limited data.",
+    cta: "Get started free",
     ctaVariant: "outline" as const,
     highlights: [
-      { text: "1 sport (MLB, NBA, or NFL)", included: true },
-      { text: "Season-level overview stats", included: true },
-      { text: "5 dashboard views per day", included: true },
-      { text: "Basic trend alerts", included: true },
-      { text: "Full trend tracker access", included: false },
-      { text: "Pitch arsenal drill-downs", included: false },
-      { text: "H2H analysis & injury reports", included: false },
-      { text: "NRFI & first basket dashboards", included: false },
-      { text: "Custom date filtering", included: false },
+      { text: "All 3 sports (MLB, NBA, NFL)", included: true },
+      { text: "Limited view of charts and tables", included: true },
+      { text: "Basic trend overview", included: true },
+      { text: "Full dashboard access", included: false },
+      { text: "Advanced filtering & drill-downs", included: false },
+      { text: "Custom metrics & views", included: false },
     ],
   },
   {
     name: "Pro",
     price: "$12",
     period: "/month",
-    description: "Unlimited access to every dashboard and feature.",
+    description:
+      "Gain the advantage with expert-curated insights, comprehensive analytics, and live data updates to power smarter, faster decisions and keep you ahead of the competition.",
     cta: "Start 7-day free trial",
     ctaVariant: "default" as const,
     popular: true,
     highlights: [
       { text: "All 3 sports -- MLB, NBA, NFL", included: true },
-      { text: "All 12 dashboards, unlimited views", included: true },
-      { text: "Full hot & cold trend trackers", included: true },
-      { text: "Pitch arsenal drill-downs", included: true },
-      { text: "H2H analysis, momentum & injuries", included: true },
-      { text: "NRFI, first basket, and matchup tools", included: true },
-      { text: "Time-range & custom date filtering", included: true },
-      { text: "RHP/LHP and handedness splits", included: true },
-      { text: "Defense vs position breakdowns", included: true },
+      { text: "All dashboards, trends & insights", included: true },
+      { text: "Real-time data access", included: true },
+      { text: "Comprehensive player & team analytics", included: true },
+      { text: "Custom metrics & views", included: true },
+      { text: "Advanced filtering & drill-downs", included: true },
     ],
+  },
+]
+
+const proFeatures = [
+  {
+    icon: Database,
+    title: "Real-Time Data Access",
+    description:
+      "Drill down into detailed stats with customizable filters for every sport.",
+  },
+  {
+    icon: BarChart3,
+    title: "Comprehensive Player & Team Analytics",
+    description:
+      "Stay ahead with instant updates on player performance, team dynamics, and live game data.",
+  },
+  {
+    icon: SlidersHorizontal,
+    title: "Custom Metrics & Views",
+    description:
+      "Tailor the data to your process with flexible metrics, sorting, and breakdowns.",
   },
 ]
 
@@ -58,8 +74,8 @@ export function PricingSection() {
               Start free. Unlock everything for $12/mo.
             </h2>
             <p className="mx-auto mt-4 max-w-xl text-muted-foreground">
-              The free tier lets you explore the data. Go Pro to get full access to
-              all 12 dashboards and every filtering tool.
+              Preview the data for free, then go Pro for full access to every
+              dashboard, filter, and insight.
             </p>
           </div>
         </FadeIn>
@@ -86,7 +102,7 @@ export function PricingSection() {
                   <span className="text-4xl font-bold text-foreground">{plan.price}</span>
                   <span className="text-sm text-muted-foreground">{plan.period}</span>
                 </div>
-                <p className="mt-2 text-sm text-muted-foreground">{plan.description}</p>
+                <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{plan.description}</p>
               </div>
 
               <div className="mb-8 flex flex-col gap-3">
@@ -119,6 +135,23 @@ export function PricingSection() {
                   <Link href="/mlb/hitting-stats">{plan.cta}</Link>
                 </Button>
               </div>
+              </div>
+            </FadeIn>
+          ))}
+        </div>
+
+        {/* Pro feature highlights */}
+        <div className="mx-auto mt-16 grid max-w-4xl gap-6 sm:grid-cols-3">
+          {proFeatures.map((feature, index) => (
+            <FadeIn key={feature.title} delay={0.3 + index * 0.1}>
+              <div className="flex flex-col items-center gap-3 text-center">
+                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                  <feature.icon className="h-5 w-5" />
+                </div>
+                <h3 className="text-sm font-semibold text-foreground">{feature.title}</h3>
+                <p className="text-xs leading-relaxed text-muted-foreground">
+                  {feature.description}
+                </p>
               </div>
             </FadeIn>
           ))}

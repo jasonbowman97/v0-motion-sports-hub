@@ -50,13 +50,13 @@ export function Navbar() {
 
         {/* Desktop nav */}
         <div className="hidden items-center gap-6 md:flex">
-          <a href="#dashboards" className="text-sm text-muted-foreground transition-colors hover:text-foreground">
+          <a href="/#dashboards" className="text-sm text-muted-foreground transition-colors hover:text-foreground">
             Dashboards
           </a>
-          <a href="#features" className="text-sm text-muted-foreground transition-colors hover:text-foreground">
+          <a href="/#features" className="text-sm text-muted-foreground transition-colors hover:text-foreground">
             Features
           </a>
-          <a href="#pricing" className="text-sm text-muted-foreground transition-colors hover:text-foreground">
+          <a href="/#pricing" className="text-sm text-muted-foreground transition-colors hover:text-foreground">
             Pricing
           </a>
 

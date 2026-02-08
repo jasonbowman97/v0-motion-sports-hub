@@ -5,6 +5,8 @@ import { mlbTrends, mlbCategories } from "@/lib/mlb-trends-data"
 import { getBattingLeaders, getPitchingLeaders } from "@/lib/mlb-api"
 import { buildTrends } from "@/lib/trends-builder"
 
+export const revalidate = 3600
+
 export const metadata = {
   title: "HeatCheck HQ - MLB Trends",
   description: "Hot and cold streaks for MLB players across hitting, power, pitching, and on-base performance.",

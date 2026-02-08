@@ -6,7 +6,8 @@ import useSWR from "swr"
 import { BarChart3, Loader2 } from "lucide-react"
 import { nbaGames as staticGames } from "@/lib/nba-h2h-data"
 import type { NBAGame } from "@/lib/nba-h2h-data"
-import type { NBAScheduleGame } from "@/lib/nba-api"
+import type { NBAScheduleGame, NBATeamSummary } from "@/lib/nba-api"
+import type { InjuredPlayer } from "@/lib/nba-h2h-data"
 import { H2HMatchupSelector } from "@/components/nba/h2h-matchup-selector"
 import { H2HHistory } from "@/components/nba/h2h-history"
 import { H2HMomentum } from "@/components/nba/h2h-momentum"
@@ -33,9 +34,44 @@ const emptyMomentum: NBAGame["awayMomentum"] = {
 
 const emptyDefense: NBAGame["awayDefense"] = { pg: 0, sg: 0, sf: 0, pf: 0, c: 0 }
 
-function espnToH2HGames(espnGames: NBAScheduleGame[]): NBAGame[] {
+function mapInjuryStatus(status: string): InjuredPlayer["status"] {
+  const lower = status.toLowerCase()
+  if (lower.includes("out")) return "Out"
+  if (lower.includes("question")) return "Questionable"
+  return "Day-To-Day"
+}
+
+function buildMomentum(summary: NBATeamSummary | undefined): NBAGame["awayMomentum"] {
+  if (!summary) return { ...emptyMomentum }
+  const record = summary.record // e.g. "35-20"
+  const [wins, losses] = record.split("-").map(Number)
+  return {
+    ...emptyMomentum,
+    streak: record,
+    ppg: Math.round(summary.ppg * 10) / 10,
+    oppPpg: Math.round(summary.oppPpg * 10) / 10,
+    last10: { wins: Math.min(wins, 10), losses: Math.min(losses, 10) },
+    last5: { wins: Math.min(wins, 5), losses: Math.min(losses, 5) },
+    trend: summary.ppg > summary.oppPpg ? "Trending Up" : summary.ppg < summary.oppPpg ? "Trending Down" : "Steady",
+    homeRecord: record,
+    awayRecord: record,
+  }
+}
+
+function buildInjuries(summary: NBATeamSummary | undefined): InjuredPlayer[] {
+  if (!summary) return []
+  return summary.injuries.map((inj) => ({
+    name: inj.name,
+    injury: inj.detail || inj.status,
+    status: mapInjuryStatus(inj.status),
+  }))
+}
+
+function espnToH2HGames(espnGames: NBAScheduleGame[], summaries: Record<string, NBATeamSummary>): NBAGame[] {
   return espnGames.map((g) => {
     const time = new Date(g.date).toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit", hour12: true })
+    const awaySummary = summaries[g.awayTeam.id]
+    const homeSummary = summaries[g.homeTeam.id]
     return {
       id: g.id,
       awayTeam: g.awayTeam.abbreviation,
@@ -45,11 +81,11 @@ function espnToH2HGames(espnGames: NBAScheduleGame[]): NBAGame[] {
       date: new Date(g.date).toLocaleDateString("en-US", { month: "short", day: "numeric" }),
       time,
       venue: g.venue,
-      awayInjuries: [],
-      homeInjuries: [],
+      awayInjuries: buildInjuries(awaySummary),
+      homeInjuries: buildInjuries(homeSummary),
       h2hHistory: { record: "N/A", awayAvgPts: 0, homeAvgPts: 0, avgTotal: 0, margin: "N/A", recentMeetings: [] },
-      awayMomentum: { ...emptyMomentum },
-      homeMomentum: { ...emptyMomentum },
+      awayMomentum: buildMomentum(awaySummary),
+      homeMomentum: buildMomentum(homeSummary),
       awayDefense: { ...emptyDefense },
       homeDefense: { ...emptyDefense },
     }
@@ -57,12 +93,12 @@ function espnToH2HGames(espnGames: NBAScheduleGame[]): NBAGame[] {
 }
 
 export default function NBAH2HPage() {
-  const { data, isLoading } = useSWR<{ games: NBAScheduleGame[] }>("/api/nba/schedule", fetcher, {
+  const { data, isLoading } = useSWR<{ games: NBAScheduleGame[]; summaries: Record<string, NBATeamSummary> }>("/api/nba/h2h", fetcher, {
     revalidateOnFocus: false,
     dedupingInterval: 3600000,
   })
 
-  const liveGames = useMemo(() => (data?.games?.length ? espnToH2HGames(data.games) : null), [data])
+  const liveGames = useMemo(() => (data?.games?.length ? espnToH2HGames(data.games, data.summaries ?? {}) : null), [data])
 
   // Merge: use live games for the matchup selector but fall back to static for detailed stats
   const allGames = liveGames ?? staticGames

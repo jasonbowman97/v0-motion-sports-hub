@@ -5,6 +5,8 @@ import { nflTrends, nflCategories } from "@/lib/nfl-trends-data"
 import { getNFLLeaders } from "@/lib/nfl-api"
 import { buildTrends } from "@/lib/trends-builder"
 
+export const revalidate = 3600
+
 export const metadata = {
   title: "HeatCheck HQ - NFL Trends",
   description: "Hot and cold streaks for NFL players across passing, rushing, receiving, and touchdowns.",

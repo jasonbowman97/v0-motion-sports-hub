@@ -7,7 +7,7 @@
 const BASE = "https://site.api.espn.com/apis/site/v2/sports/football/nfl"
 
 async function espnFetch<T>(path: string): Promise<T> {
-  const res = await fetch(`${BASE}${path}`, { next: { revalidate: 86400 } })
+  const res = await fetch(`${BASE}${path}`, { next: { revalidate: 3600 } })
   if (!res.ok) throw new Error(`ESPN NFL ${res.status}: ${path}`)
   return res.json() as Promise<T>
 }
@@ -159,6 +159,7 @@ export interface NFLPlayerSeasonStats {
   name: string
   position: string
   team: string
+  gamesPlayed: number
   passing?: { completions: number; attempts: number; yards: number; touchdowns: number; interceptions: number; rating: number }
   rushing?: { attempts: number; yards: number; touchdowns: number; yardsPerAttempt: number; long: number }
   receiving?: { receptions: number; yards: number; touchdowns: number; targets: number; yardsPerReception: number; long: number }
@@ -168,7 +169,7 @@ export async function getNFLPlayerOverview(playerId: string): Promise<NFLPlayerS
   try {
     const raw = await fetch(
       `https://site.web.api.espn.com/apis/common/v3/sports/football/nfl/athletes/${playerId}/overview`,
-      { next: { revalidate: 86400 } }
+      { next: { revalidate: 3600 } }
     )
     if (!raw.ok) return null
     const data = await raw.json()
@@ -193,6 +194,7 @@ export async function getNFLPlayerOverview(playerId: string): Promise<NFLPlayerS
       name: athlete.displayName ?? "",
       position,
       team,
+      gamesPlayed: get("gamesPlayed") || 1,
     }
 
     if (names.includes("passingYards")) {

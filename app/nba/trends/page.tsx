@@ -5,6 +5,8 @@ import { nbaTrends, nbaCategories } from "@/lib/nba-trends-data"
 import { getNBALeaders } from "@/lib/nba-api"
 import { buildTrends } from "@/lib/trends-builder"
 
+export const revalidate = 3600
+
 export const metadata = {
   title: "HeatCheck HQ - NBA Trends",
   description: "Hot and cold streaks for NBA players across scoring, threes, rebounds, and assists.",

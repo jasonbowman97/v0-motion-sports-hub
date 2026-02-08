@@ -1,18 +1,146 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useMemo, useEffect } from "react"
 import Link from "next/link"
-import { BarChart3 } from "lucide-react"
-import { nbaGames } from "@/lib/nba-h2h-data"
+import useSWR from "swr"
+import { BarChart3, Loader2 } from "lucide-react"
+import { nbaGames as staticGames } from "@/lib/nba-h2h-data"
+import type { NBAGame } from "@/lib/nba-h2h-data"
+import type { NBAScheduleGame, NBATeamSummary } from "@/lib/nba-api"
+import type { InjuredPlayer } from "@/lib/nba-h2h-data"
 import { H2HMatchupSelector } from "@/components/nba/h2h-matchup-selector"
 import { H2HHistory } from "@/components/nba/h2h-history"
 import { H2HMomentum } from "@/components/nba/h2h-momentum"
 import { H2HDefense } from "@/components/nba/h2h-defense"
 import { H2HInjuries } from "@/components/nba/h2h-injuries"
+import { PaywallBanner } from "@/components/paywall-banner"
+import { createClient } from "@/lib/supabase/client"
+
+const fetcher = (url: string) => fetch(url).then((r) => r.json())
+
+const emptyMomentum: NBAGame["awayMomentum"] = {
+  trend: "Steady",
+  streak: "N/A",
+  streakType: "W",
+  last5: { wins: 0, losses: 0 },
+  last10: { wins: 0, losses: 0 },
+  ppg: 0,
+  oppPpg: 0,
+  atsRecord: "N/A",
+  ouRecord: "N/A",
+  homeRecord: "N/A",
+  homePpg: 0,
+  awayRecord: "N/A",
+  awayPpg: 0,
+}
+
+const emptyDefense: NBAGame["awayDefense"] = { pg: 0, sg: 0, sf: 0, pf: 0, c: 0 }
+
+function mapInjuryStatus(status: string): InjuredPlayer["status"] {
+  const lower = status.toLowerCase()
+  if (lower.includes("out")) return "Out"
+  if (lower.includes("question")) return "Questionable"
+  return "Day-To-Day"
+}
+
+function buildMomentum(summary: NBATeamSummary | undefined): NBAGame["awayMomentum"] {
+  if (!summary) return { ...emptyMomentum }
+  const record = summary.record // e.g. "35-20"
+  const [wins, losses] = record.split("-").map(Number)
+  return {
+    ...emptyMomentum,
+    streak: record,
+    ppg: Math.round(summary.ppg * 10) / 10,
+    oppPpg: Math.round(summary.oppPpg * 10) / 10,
+    last10: { wins: Math.min(wins, 10), losses: Math.min(losses, 10) },
+    last5: { wins: Math.min(wins, 5), losses: Math.min(losses, 5) },
+    trend: summary.ppg > summary.oppPpg ? "Trending Up" : summary.ppg < summary.oppPpg ? "Trending Down" : "Steady",
+    homeRecord: record,
+    awayRecord: record,
+  }
+}
+
+function buildInjuries(summary: NBATeamSummary | undefined): InjuredPlayer[] {
+  if (!summary) return []
+  return summary.injuries.map((inj) => ({
+    name: inj.name,
+    injury: inj.detail || inj.status,
+    status: mapInjuryStatus(inj.status),
+  }))
+}
+
+function espnToH2HGames(espnGames: NBAScheduleGame[], summaries: Record<string, NBATeamSummary>): NBAGame[] {
+  return espnGames.map((g) => {
+    const time = new Date(g.date).toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit", hour12: true })
+    const awaySummary = summaries[g.awayTeam.id]
+    const homeSummary = summaries[g.homeTeam.id]
+    return {
+      id: g.id,
+      awayTeam: g.awayTeam.abbreviation,
+      awayFull: g.awayTeam.displayName,
+      homeTeam: g.homeTeam.abbreviation,
+      homeFull: g.homeTeam.displayName,
+      date: new Date(g.date).toLocaleDateString("en-US", { month: "short", day: "numeric" }),
+      time,
+      venue: g.venue,
+      awayInjuries: buildInjuries(awaySummary),
+      homeInjuries: buildInjuries(homeSummary),
+      h2hHistory: { record: "N/A", awayAvgPts: 0, homeAvgPts: 0, avgTotal: 0, margin: "N/A", recentMeetings: [] },
+      awayMomentum: buildMomentum(awaySummary),
+      homeMomentum: buildMomentum(homeSummary),
+      awayDefense: { ...emptyDefense },
+      homeDefense: { ...emptyDefense },
+    }
+  })
+}
 
 export default function NBAH2HPage() {
-  const [selectedGameId, setSelectedGameId] = useState(nbaGames[0].id)
-  const selectedGame = nbaGames.find((g) => g.id === selectedGameId) ?? nbaGames[0]
+  const [userStatus, setUserStatus] = useState<'none' | 'free' | 'pro'>('none')
+
+  useEffect(() => {
+    async function checkAuth() {
+      const supabase = createClient()
+      const { data: { user } } = await supabase.auth.getUser()
+
+      if (!user) {
+        setUserStatus('none')
+        return
+      }
+
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('subscription_status')
+        .eq('id', user.id)
+        .single()
+
+      setUserStatus(profile?.subscription_status || 'free')
+    }
+
+    checkAuth()
+  }, [])
+
+  const { data, isLoading } = useSWR<{ games: NBAScheduleGame[] }>("/api/nba/schedule", fetcher, {
+  const { data, isLoading } = useSWR<{ games: NBAScheduleGame[]; summaries: Record<string, NBATeamSummary> }>("/api/nba/h2h", fetcher, {
+    revalidateOnFocus: false,
+    dedupingInterval: 3600000,
+  })
+
+  const liveGames = useMemo(() => (data?.games?.length ? espnToH2HGames(data.games, data.summaries ?? {}) : null), [data])
+
+  // Merge: use live games for the matchup selector but fall back to static for detailed stats
+  const allGames = liveGames ?? staticGames
+  const isLive = !!liveGames
+
+  const [selectedGameId, setSelectedGameId] = useState<string | null>(null)
+  const activeId = selectedGameId ?? allGames[0]?.id
+  // Try to find a matching static game for full detail, otherwise use the live shell
+  const selectedGame = staticGames.find((g) => g.id === activeId)
+    ?? allGames.find((g) => g.id === activeId)
+    ?? allGames[0]
+
+  if (userStatus !== 'pro') {
+    return <PaywallBanner userStatus={userStatus} dashboardName="NBA Head-to-Head" />
+  }
 
   return (
     <div className="min-h-screen bg-background">
@@ -26,7 +154,7 @@ export default function NBAH2HPage() {
               </div>
               <div>
                 <h1 className="text-lg font-semibold tracking-tight text-foreground">
-                  Diamond Analytics
+                  HeatCheck HQ
                 </h1>
                 <p className="text-xs text-muted-foreground">NBA Head-to-Head</p>
               </div>
@@ -67,7 +195,15 @@ export default function NBAH2HPage() {
 
       <main className="mx-auto max-w-[1440px] px-6 py-8">
         <div className="mb-8">
-          <h2 className="text-2xl font-bold text-foreground tracking-tight">Team vs Team H2H Analysis</h2>
+          <div className="flex items-center gap-3">
+            <h2 className="text-2xl font-bold text-foreground tracking-tight">Team vs Team H2H Analysis</h2>
+            {isLoading && <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />}
+            {isLive && (
+              <span className="text-[10px] font-semibold uppercase tracking-wider text-emerald-400 bg-emerald-400/10 px-2 py-0.5 rounded-md">
+                Live
+              </span>
+            )}
+          </div>
           <p className="text-sm text-muted-foreground mt-1">
             Comprehensive matchup analytics with betting insights and injury reports
           </p>
@@ -75,8 +211,8 @@ export default function NBAH2HPage() {
 
         <div className="flex flex-col gap-6">
           <H2HMatchupSelector
-            games={nbaGames}
-            selectedId={selectedGameId}
+            games={allGames}
+            selectedId={activeId}
             onSelect={setSelectedGameId}
           />
           <H2HHistory game={selectedGame} />

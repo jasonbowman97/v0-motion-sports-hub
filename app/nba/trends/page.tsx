@@ -2,13 +2,33 @@ import Link from "next/link"
 import { BarChart3 } from "lucide-react"
 import { TrendsDashboard } from "@/components/trends/trends-dashboard"
 import { nbaTrends, nbaCategories } from "@/lib/nba-trends-data"
+import { getNBAStreakTrends } from "@/lib/nba-streaks"
+import { PaywallBanner } from "@/components/paywall-banner"
+import { getSubscriptionStatus } from "@/lib/auth/actions"
+
+export const dynamic = 'force-dynamic'
+export const revalidate = 0
 
 export const metadata = {
-  title: "Diamond Analytics - NBA Trends",
-  description: "Hot and cold streaks for NBA players across scoring, threes, rebounds, and assists.",
+  title: "HeatCheck HQ - NBA Active Streaks",
+  description: "Active scoring, shooting, and all-around performance streaks for NBA players based on recent game-by-game data.",
 }
 
-export default function NBATrendsPage() {
+async function getLiveTrends() {
+  try {
+    const trends = await getNBAStreakTrends()
+    return trends.length > 0 ? trends : null
+  } catch {
+    return null
+  }
+}
+
+export default async function NBATrendsPage() {
+  const userStatus = await getSubscriptionStatus()
+  const liveTrends = await getLiveTrends()
+  const trends = liveTrends ?? nbaTrends
+  const isLive = !!liveTrends
+
   return (
     <div className="min-h-screen bg-background">
       <header className="border-b border-border bg-card/50 backdrop-blur-sm sticky top-0 z-50">
@@ -19,7 +39,7 @@ export default function NBATrendsPage() {
                 <BarChart3 className="h-5 w-5 text-primary" />
               </div>
               <div>
-                <h1 className="text-lg font-semibold tracking-tight text-foreground">Diamond Analytics</h1>
+                <h1 className="text-lg font-semibold tracking-tight text-foreground">HeatCheck HQ</h1>
                 <p className="text-xs text-muted-foreground">NBA Trends</p>
               </div>
             </Link>
@@ -47,12 +67,17 @@ export default function NBATrendsPage() {
       </header>
 
       <main className="mx-auto max-w-[1440px] px-6 py-8">
-        <TrendsDashboard
-          trends={nbaTrends}
-          categories={nbaCategories}
-          title="NBA Hot & Cold Trends"
-          subtitle="Players on notable streaks based on recent game performance. Spot edges in scoring, three-point shooting, rebounding, and assist consistency."
-        />
+        {userStatus === 'pro' ? (
+          <TrendsDashboard
+            trends={trends}
+            categories={nbaCategories}
+            title="NBA Active Streaks"
+            subtitle="Players on active hot and cold streaks based on recent game-by-game performance. Identifies patterns like '7 straight games with 25+ points' or '5 straight double-doubles' to spot current form."
+            isLive={isLive}
+          />
+        ) : (
+          <PaywallBanner userStatus={userStatus as 'none' | 'free' | 'pro'} dashboardName="NBA Trends" />
+        )}
       </main>
     </div>
   )

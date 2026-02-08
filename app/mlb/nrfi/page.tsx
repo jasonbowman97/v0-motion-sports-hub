@@ -1,11 +1,13 @@
 "use client"
 
-import { useState, useMemo } from "react"
+import { useState, useMemo, useEffect } from "react"
 import Link from "next/link"
-import { BarChart3, ChevronLeft, ChevronRight, Calendar } from "lucide-react"
+import useSWR from "swr"
+import { BarChart3, ChevronLeft, ChevronRight, Calendar, Loader2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { NrfiTable } from "@/components/mlb/nrfi-table"
 import { nrfiPitchers } from "@/lib/nrfi-data"
+import type { NrfiPitcher } from "@/lib/nrfi-data"
 import {
   Select,
   SelectContent,
@@ -13,6 +15,62 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
+import { RowLimiter, limitRows } from "@/components/row-limiter"
+import { createClient } from "@/lib/supabase/client"
+
+interface APIGame {
+  gamePk: number
+  gameDate: string
+  status: string
+  away: { id: number; name: string; abbreviation: string; probablePitcher: { id: number; fullName: string } | null }
+  home: { id: number; name: string; abbreviation: string; probablePitcher: { id: number; fullName: string } | null }
+  venue: string
+  weather: { condition: string; temp: string; wind: string } | null
+}
+
+function transformToNrfi(games: APIGame[]): NrfiPitcher[] {
+  const rows: NrfiPitcher[] = []
+  for (const g of games) {
+    const time = new Date(g.gameDate).toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit", hour12: true })
+    if (g.away.probablePitcher) {
+      rows.push({
+        id: `live-${g.away.probablePitcher.id}`,
+        time,
+        team: g.away.abbreviation,
+        player: g.away.probablePitcher.fullName,
+        hand: "R",
+        record: "--",
+        nrfiPct: 0,
+        streak: 0,
+        hrsAllowed: 0,
+        opponent: g.home.abbreviation,
+        opponentRecord: "--",
+        opponentNrfiStreak: 0,
+        opponentNrfiRank: 0,
+      })
+    }
+    if (g.home.probablePitcher) {
+      rows.push({
+        id: `live-${g.home.probablePitcher.id}`,
+        time,
+        team: g.home.abbreviation,
+        player: g.home.probablePitcher.fullName,
+        hand: "R",
+        record: "--",
+        nrfiPct: 0,
+        streak: 0,
+        hrsAllowed: 0,
+        opponent: g.away.abbreviation,
+        opponentRecord: "--",
+        opponentNrfiStreak: 0,
+        opponentNrfiRank: 0,
+      })
+    }
+  }
+  return rows
+}
+
+const fetcher = (url: string) => fetch(url).then((r) => r.json())
 
 type HandFilter = "All" | "RHP" | "LHP"
 
@@ -20,23 +78,89 @@ export default function NrfiPage() {
   const [handFilter, setHandFilter] = useState<HandFilter>("All")
   const [dateOffset, setDateOffset] = useState(0)
   const [yearFilter, setYearFilter] = useState("2025")
+  const [userStatus, setUserStatus] = useState<'none' | 'free' | 'pro'>('none')
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    async function checkAuth() {
+      const supabase = createClient()
+      const { data: { user } } = await supabase.auth.getUser()
+
+      if (!user) {
+        setUserStatus('none')
+        setLoading(false)
+        return
+      }
+
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('subscription_status')
+        .eq('id', user.id)
+        .single()
+
+      setUserStatus(profile?.subscription_status || 'free')
+      setLoading(false)
+    }
+
+    checkAuth()
+  }, [])
+
+  const { data, isLoading } = useSWR<{ games: APIGame[]; date: string }>("/api/mlb/schedule", fetcher, {
+    revalidateOnFocus: false,
+    dedupingInterval: 3600000,
+  })
+
+  const isToday = dateOffset === 0
+  const liveGames = data?.games ?? []
+  const liveNrfi = useMemo(() => (liveGames.length > 0 ? transformToNrfi(liveGames) : []), [liveGames])
+  const isLive = isToday && liveNrfi.length > 0
+
+  // Use live probable pitchers for today, static for other dates
+  const basePitchers = isLive ? liveNrfi : nrfiPitchers
 
   // Date navigation
-  const baseDate = new Date(2025, 7, 18) // Aug 18, 2025
-  const currentDate = new Date(baseDate)
-  currentDate.setDate(currentDate.getDate() + dateOffset)
+  const currentDate = useMemo(() => {
+    const d = new Date()
+    d.setDate(d.getDate() + dateOffset)
+    return d
+  }, [dateOffset])
+  const dateParam = currentDate.toISOString().slice(0, 10)
   const dateLabel = currentDate.toLocaleDateString("en-US", {
     weekday: "short",
     month: "short",
     day: "numeric",
   })
 
+  // Filter by pitcher hand (only for pro users)
+  const { data, isLoading } = useSWR<{ games: APIGame[]; date: string }>(`/api/mlb/schedule?date=${dateParam}`, fetcher, {
+    revalidateOnFocus: false,
+    dedupingInterval: 3600000,
+  })
+
+  const liveNrfi = useMemo(() => {
+    const games = data?.games ?? []
+    return games.length > 0 ? transformToNrfi(games) : []
+  }, [data])
+  const isLive = liveNrfi.length > 0
+
+  // Use live probable pitchers when available, static as fallback
+  const basePitchers = isLive ? liveNrfi : nrfiPitchers
+
   // Filter by pitcher hand
   const filteredData = useMemo(() => {
-    if (handFilter === "All") return nrfiPitchers
-    const hand = handFilter === "RHP" ? "R" : "L"
-    return nrfiPitchers.filter((p) => p.hand === hand)
-  }, [handFilter])
+    let data = basePitchers
+
+    // Only apply filters for pro users
+    if (userStatus === 'pro') {
+      if (handFilter !== "All") {
+        const hand = handFilter === "RHP" ? "R" : "L"
+        data = data.filter((p) => p.hand === hand)
+      }
+    }
+
+    // Limit rows based on subscription status
+    return limitRows(data, userStatus)
+  }, [handFilter, basePitchers, userStatus])
 
   return (
     <div className="min-h-screen bg-background">
@@ -46,7 +170,7 @@ export default function NrfiPage() {
           <div className="flex items-center gap-3">
             <Link href="/" className="flex items-center gap-2 text-foreground hover:text-primary transition-colors">
               <BarChart3 className="h-5 w-5 text-primary" />
-              <span className="text-sm font-bold tracking-tight">Diamond Analytics</span>
+              <span className="text-sm font-bold tracking-tight">HeatCheck HQ</span>
             </Link>
             <span className="text-muted-foreground/40">|</span>
             <span className="text-xs font-medium text-primary">MLB</span>
@@ -68,6 +192,12 @@ export default function NrfiPage() {
               className="text-xs font-medium text-muted-foreground hover:text-foreground transition-colors px-3 py-1.5 rounded-md hover:bg-secondary"
             >
               Pitching Stats
+            </Link>
+            <Link
+              href="/mlb/weather"
+              className="text-xs font-medium text-muted-foreground hover:text-foreground transition-colors px-3 py-1.5 rounded-md hover:bg-secondary"
+            >
+              Weather
             </Link>
             <Link
               href="/mlb/trends"
@@ -95,9 +225,19 @@ export default function NrfiPage() {
       <main className="mx-auto max-w-[1440px] px-6 py-6 flex flex-col gap-6">
         {/* Title */}
         <div className="flex flex-col gap-1">
-          <h1 className="text-2xl font-bold text-foreground text-balance">No Run First Inning</h1>
+          <div className="flex items-center gap-3">
+            <h1 className="text-2xl font-bold text-foreground text-balance">No Run First Inning</h1>
+            {isLoading && <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />}
+            {isLive && (
+              <span className="text-[10px] font-semibold uppercase tracking-wider text-emerald-400 bg-emerald-400/10 px-2 py-0.5 rounded-md">
+                Live
+              </span>
+            )}
+          </div>
           <p className="text-sm text-muted-foreground">
-            Probable pitchers and their NRFI track records for today{"'"}s slate.
+            {isLive
+              ? `${liveNrfi.length} probable pitchers for today's slate. NRFI stats show season totals.`
+              : "Probable pitchers and their NRFI track records for today's slate."}
           </p>
         </div>
 
@@ -128,8 +268,8 @@ export default function NrfiPage() {
           </div>
 
           {/* Year selector */}
-          <Select value={yearFilter} onValueChange={setYearFilter}>
-            <SelectTrigger className="w-[100px] h-9 text-xs bg-card border-border">
+          <Select value={yearFilter} onValueChange={setYearFilter} disabled={userStatus !== 'pro'}>
+            <SelectTrigger className="w-[100px] h-9 text-xs bg-card border-border disabled:opacity-50 disabled:cursor-not-allowed">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -149,8 +289,9 @@ export default function NrfiPage() {
               {(["All", "RHP", "LHP"] as const).map((hand) => (
                 <button
                   key={hand}
-                  onClick={() => setHandFilter(hand)}
-                  className={`px-3.5 py-1.5 text-xs font-semibold transition-colors ${
+                  onClick={() => userStatus === 'pro' && setHandFilter(hand)}
+                  disabled={userStatus !== 'pro'}
+                  className={`px-3.5 py-1.5 text-xs font-semibold transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${
                     handFilter === hand
                       ? "bg-primary text-primary-foreground"
                       : "bg-card text-muted-foreground hover:text-foreground"
@@ -176,7 +317,9 @@ export default function NrfiPage() {
         </div>
 
         {/* Data table */}
-        <NrfiTable data={filteredData} />
+        <RowLimiter userStatus={userStatus} totalRows={basePitchers.length}>
+          <NrfiTable data={filteredData} />
+        </RowLimiter>
       </main>
     </div>
   )

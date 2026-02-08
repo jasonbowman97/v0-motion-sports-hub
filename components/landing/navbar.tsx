@@ -44,7 +44,7 @@ export function Navbar() {
             <BarChart3 className="h-5 w-5 text-primary" />
           </div>
           <span className="text-lg font-bold tracking-tight text-foreground">
-            Diamond Analytics
+            HeatCheck HQ
           </span>
         </Link>
 

@@ -14,7 +14,7 @@ export function NFLHeader() {
             </div>
             <div>
               <h1 className="text-lg font-semibold tracking-tight text-foreground">
-                Diamond Analytics
+                HeatCheck HQ
               </h1>
               <p className="text-xs text-muted-foreground">NFL Matchup Center</p>
             </div>
@@ -36,6 +36,12 @@ export function NFLHeader() {
           <span className="text-xs font-medium text-primary bg-primary/10 px-3 py-1.5 rounded-md">
             Matchup
           </span>
+          <Link
+            href="/nfl/redzone"
+            className="text-xs font-medium text-muted-foreground hover:text-foreground transition-colors px-3 py-1.5 rounded-md hover:bg-secondary"
+          >
+            Redzone
+          </Link>
           <Link
             href="/nfl/trends"
             className="text-xs font-medium text-muted-foreground hover:text-foreground transition-colors px-3 py-1.5 rounded-md hover:bg-secondary"

@@ -32,7 +32,7 @@ export function DashboardHeader({ showBack, onBack, playerName }: DashboardHeade
             </div>
             <div>
               <h1 className="text-lg font-semibold tracking-tight text-foreground">
-                {playerName ? playerName : "Diamond Analytics"}
+                {playerName ? playerName : "HeatCheck HQ"}
               </h1>
               {!playerName && (
                 <p className="text-xs text-muted-foreground">Player Hitting Stats</p>
@@ -58,6 +58,12 @@ export function DashboardHeader({ showBack, onBack, playerName }: DashboardHeade
             className="text-xs font-medium text-muted-foreground hover:text-foreground transition-colors px-3 py-1.5 rounded-md hover:bg-secondary"
           >
             Pitching Stats
+          </Link>
+          <Link
+            href="/mlb/weather"
+            className="text-xs font-medium text-muted-foreground hover:text-foreground transition-colors px-3 py-1.5 rounded-md hover:bg-secondary"
+          >
+            Weather
           </Link>
           <Link
             href="/mlb/trends"

@@ -2,13 +2,33 @@ import Link from "next/link"
 import { BarChart3 } from "lucide-react"
 import { TrendsDashboard } from "@/components/trends/trends-dashboard"
 import { mlbTrends, mlbCategories } from "@/lib/mlb-trends-data"
+import { getMLBStreakTrends } from "@/lib/mlb-streaks"
+import { PaywallBanner } from "@/components/paywall-banner"
+import { getSubscriptionStatus } from "@/lib/auth/actions"
+
+export const dynamic = 'force-dynamic'
+export const revalidate = 0
 
 export const metadata = {
-  title: "Diamond Analytics - MLB Trends",
-  description: "Hot and cold streaks for MLB players across hitting, power, pitching, and on-base performance.",
+  title: "HeatCheck HQ - MLB Active Streaks",
+  description: "Active hitting and pitching streaks for MLB players. Identify hot hands and cold slumps based on recent game-by-game performance.",
 }
 
-export default function MLBTrendsPage() {
+async function getLiveTrends() {
+  try {
+    const trends = await getMLBStreakTrends()
+    return trends.length > 0 ? trends : null
+  } catch {
+    return null
+  }
+}
+
+export default async function MLBTrendsPage() {
+  const userStatus = await getSubscriptionStatus()
+  const liveTrends = await getLiveTrends()
+  const trends = liveTrends ?? mlbTrends
+  const isLive = !!liveTrends
+
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
@@ -20,7 +40,7 @@ export default function MLBTrendsPage() {
                 <BarChart3 className="h-5 w-5 text-primary" />
               </div>
               <div>
-                <h1 className="text-lg font-semibold tracking-tight text-foreground">Diamond Analytics</h1>
+                <h1 className="text-lg font-semibold tracking-tight text-foreground">HeatCheck HQ</h1>
                 <p className="text-xs text-muted-foreground">MLB Trends</p>
               </div>
             </Link>
@@ -34,6 +54,9 @@ export default function MLBTrendsPage() {
             </Link>
             <Link href="/mlb/pitching-stats" className="text-xs font-medium text-muted-foreground hover:text-foreground transition-colors px-3 py-1.5 rounded-md hover:bg-secondary">
               Pitching Stats
+            </Link>
+            <Link href="/mlb/weather" className="text-xs font-medium text-muted-foreground hover:text-foreground transition-colors px-3 py-1.5 rounded-md hover:bg-secondary">
+              Weather
             </Link>
             <span className="text-xs font-medium text-primary bg-primary/10 px-3 py-1.5 rounded-md">
               Trends
@@ -50,12 +73,17 @@ export default function MLBTrendsPage() {
       </header>
 
       <main className="mx-auto max-w-[1440px] px-6 py-8">
-        <TrendsDashboard
-          trends={mlbTrends}
-          categories={mlbCategories}
-          title="MLB Hot & Cold Trends"
-          subtitle="Players on notable streaks based on recent game performance. Identify edges from consistent patterns in hitting, power, pitching, and on-base stats."
-        />
+        {userStatus === 'pro' ? (
+          <TrendsDashboard
+            trends={trends}
+            categories={mlbCategories}
+            title="MLB Active Streaks"
+            subtitle="Players on active hot and cold streaks based on recent game-by-game performance. Identifies patterns like '9 hits in last 10 games' or '5 straight quality starts' to spot current form, not just season totals."
+            isLive={isLive}
+          />
+        ) : (
+          <PaywallBanner userStatus={userStatus as 'none' | 'free' | 'pro'} dashboardName="MLB Trends" />
+        )}
       </main>
     </div>
   )

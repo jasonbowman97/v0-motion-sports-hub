@@ -12,7 +12,7 @@ export function Footer() {
               <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10">
                 <BarChart3 className="h-4 w-4 text-primary" />
               </div>
-              <span className="text-sm font-semibold text-foreground">Diamond Analytics</span>
+              <span className="text-sm font-semibold text-foreground">HeatCheck HQ</span>
             </div>
             <p className="text-xs text-muted-foreground leading-relaxed">
               Advanced sports analytics for MLB, NBA, and NFL. 12 dashboards.
@@ -53,12 +53,15 @@ export function Footer() {
 
         <div className="mt-10 pt-6 border-t border-border flex flex-col items-center gap-4 md:flex-row md:justify-between">
           <p className="text-xs text-muted-foreground">
-            2026 Diamond Analytics. All rights reserved.
+            © 2026 HeatCheck HQ. All rights reserved.
           </p>
-          <div className="flex items-center gap-6">
+          <div className="flex items-center gap-4 flex-wrap justify-center">
             <a href="#dashboards" className="text-xs text-muted-foreground transition-colors hover:text-foreground">Dashboards</a>
             <a href="#features" className="text-xs text-muted-foreground transition-colors hover:text-foreground">Features</a>
             <a href="#pricing" className="text-xs text-muted-foreground transition-colors hover:text-foreground">Pricing</a>
+            <span className="text-muted-foreground/50">•</span>
+            <Link href="/privacy" className="text-xs text-muted-foreground transition-colors hover:text-foreground">Privacy</Link>
+            <Link href="/terms" className="text-xs text-muted-foreground transition-colors hover:text-foreground">Terms</Link>
           </div>
         </div>
       </div>

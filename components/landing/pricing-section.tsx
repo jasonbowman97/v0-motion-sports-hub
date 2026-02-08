@@ -1,6 +1,7 @@
 import Link from "next/link"
 import { Check, X } from "lucide-react"
 import { Button } from "@/components/ui/button"
+import { FadeIn } from "@/components/ui/fade-in"
 
 const plans = [
   {
@@ -48,29 +49,31 @@ export function PricingSection() {
   return (
     <section id="pricing" className="py-20 md:py-32 border-t border-border">
       <div className="mx-auto max-w-7xl px-6">
-        <div className="text-center mb-16">
-          <span className="text-xs font-semibold uppercase tracking-widest text-primary">
-            Pricing
-          </span>
-          <h2 className="mt-3 text-3xl font-bold tracking-tight text-foreground text-balance md:text-4xl">
-            Start free. Unlock everything for $12/mo.
-          </h2>
-          <p className="mx-auto mt-4 max-w-xl text-muted-foreground">
-            The free tier lets you explore the data. Go Pro to get full access to
-            all 12 dashboards and every filtering tool.
-          </p>
-        </div>
+        <FadeIn>
+          <div className="text-center mb-16">
+            <span className="text-xs font-semibold uppercase tracking-widest text-primary">
+              Pricing
+            </span>
+            <h2 className="mt-3 text-3xl font-bold tracking-tight text-foreground text-balance md:text-4xl">
+              Start free. Unlock everything for $12/mo.
+            </h2>
+            <p className="mx-auto mt-4 max-w-xl text-muted-foreground">
+              The free tier lets you explore the data. Go Pro to get full access to
+              all 12 dashboards and every filtering tool.
+            </p>
+          </div>
+        </FadeIn>
 
         <div className="mx-auto grid max-w-4xl gap-6 md:grid-cols-2">
-          {plans.map((plan) => (
-            <div
-              key={plan.name}
-              className={`relative flex flex-col rounded-xl border p-8 ${
-                plan.popular
-                  ? "border-primary bg-card shadow-lg shadow-primary/5"
-                  : "border-border bg-card"
-              }`}
-            >
+          {plans.map((plan, index) => (
+            <FadeIn key={plan.name} delay={0.1 + index * 0.1}>
+              <div
+                className={`relative flex flex-col rounded-xl border p-8 h-full ${
+                  plan.popular
+                    ? "border-primary bg-card shadow-lg shadow-primary/5"
+                    : "border-border bg-card"
+                }`}
+              >
               {plan.popular && (
                 <div className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-primary px-4 py-1 text-xs font-bold text-primary-foreground">
                   Most Popular
@@ -116,7 +119,8 @@ export function PricingSection() {
                   <Link href="/mlb/hitting-stats">{plan.cta}</Link>
                 </Button>
               </div>
-            </div>
+              </div>
+            </FadeIn>
           ))}
         </div>
       </div>

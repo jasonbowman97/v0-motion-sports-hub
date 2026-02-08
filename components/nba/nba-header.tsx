@@ -14,7 +14,7 @@ export function NBAHeader() {
             </div>
             <div>
               <h1 className="text-lg font-semibold tracking-tight text-foreground">
-                Diamond Analytics
+                HeatCheck HQ
               </h1>
               <p className="text-xs text-muted-foreground">NBA First Basket</p>
             </div>

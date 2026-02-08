@@ -1,23 +1,86 @@
 "use client"
 
-import { useState, useMemo } from "react"
+import { useState, useMemo, useEffect } from "react"
 import Link from "next/link"
-import { BarChart3 } from "lucide-react"
-import { pitchers } from "@/lib/pitching-data"
+import useSWR from "swr"
+import { BarChart3, Loader2 } from "lucide-react"
+import { pitchers as staticPitchers } from "@/lib/pitching-data"
 import type { PitcherStats } from "@/lib/pitching-data"
 import { PitchingTable } from "@/components/mlb/pitching-table"
 import { PitcherArsenal } from "@/components/mlb/pitcher-arsenal"
+import type { PitchingLeader } from "@/lib/mlb-api"
+import { PaywallBanner } from "@/components/paywall-banner"
+import { createClient } from "@/lib/supabase/client"
+
+const fetcher = (url: string) => fetch(url).then((r) => r.json())
+
+function transformLeaders(leaders: PitchingLeader[]): PitcherStats[] {
+  return leaders.map((l) => ({
+    id: String(l.id),
+    name: l.name,
+    team: l.team,
+    hand: (l.hand === "L" ? "L" : "R") as "L" | "R",
+    era: l.era,
+    kPerGame: l.inningsPitched > 0 ? (l.strikeOuts / l.inningsPitched) * 9 : 0,
+    kPct: l.inningsPitched > 0 ? ((l.strikeOuts / (l.inningsPitched * 3 + l.strikeOuts + l.walks)) * 100) : 0,
+    cswPct: 0, // not available from MLB Stats API
+    inningsPitched: l.inningsPitched,
+    oppKPctL30: 0,
+    hr9: l.inningsPitched > 0 ? (l.homeRuns / l.inningsPitched) * 9 : 0,
+    barrelPct: 0,
+    hardHitPct: 0,
+    hrFbPct: 0,
+    flyBallPct: 0,
+    pulledAirPct: 0,
+    arsenal: [],
+  }))
+}
 
 type HandFilter = "ALL" | "L" | "R"
 
 export default function PitchingStatsPage() {
   const [handFilter, setHandFilter] = useState<HandFilter>("ALL")
   const [selectedPitcher, setSelectedPitcher] = useState<PitcherStats | null>(null)
+  const [userStatus, setUserStatus] = useState<'none' | 'free' | 'pro'>('none')
+
+  useEffect(() => {
+    async function checkAuth() {
+      const supabase = createClient()
+      const { data: { user } } = await supabase.auth.getUser()
+
+      if (!user) {
+        setUserStatus('none')
+        return
+      }
+
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('subscription_status')
+        .eq('id', user.id)
+        .single()
+
+      setUserStatus(profile?.subscription_status || 'free')
+    }
+
+    checkAuth()
+  }, [])
+
+  const { data, isLoading } = useSWR<{ leaders: PitchingLeader[] }>("/api/mlb/pitching", fetcher, {
+    revalidateOnFocus: false,
+    dedupingInterval: 3600000,
+  })
+
+  const isLive = !!data?.leaders?.length
+  const basePitchers = isLive ? transformLeaders(data.leaders) : staticPitchers
 
   const filteredData = useMemo(() => {
-    if (handFilter === "ALL") return pitchers
-    return pitchers.filter((p) => p.hand === handFilter)
-  }, [handFilter])
+    if (handFilter === "ALL") return basePitchers
+    return basePitchers.filter((p) => p.hand === handFilter)
+  }, [handFilter, basePitchers])
+
+  if (userStatus !== 'pro') {
+    return <PaywallBanner userStatus={userStatus} dashboardName="MLB Pitching Stats" />
+  }
 
   return (
     <div className="min-h-screen bg-background">
@@ -30,7 +93,7 @@ export default function PitchingStatsPage() {
                 <BarChart3 className="h-5 w-5 text-primary" />
               </div>
               <div>
-                <h1 className="text-lg font-semibold tracking-tight text-foreground">Diamond Analytics</h1>
+                <h1 className="text-lg font-semibold tracking-tight text-foreground">HeatCheck HQ</h1>
                 <p className="text-xs text-muted-foreground">Pitching Stats</p>
               </div>
             </div>
@@ -45,6 +108,9 @@ export default function PitchingStatsPage() {
             <span className="text-xs font-medium text-primary bg-primary/10 px-3 py-1.5 rounded-md">
               Pitching Stats
             </span>
+            <Link href="/mlb/weather" className="text-xs font-medium text-muted-foreground hover:text-foreground transition-colors px-3 py-1.5 rounded-md hover:bg-secondary">
+              Weather
+            </Link>
             <Link href="/mlb/trends" className="text-xs font-medium text-muted-foreground hover:text-foreground transition-colors px-3 py-1.5 rounded-md hover:bg-secondary">
               Trends
             </Link>
@@ -85,8 +151,16 @@ export default function PitchingStatsPage() {
                 </div>
               </div>
 
-              <div className="ml-auto text-xs text-muted-foreground font-mono tabular-nums">
-                {filteredData.length} pitchers
+              <div className="ml-auto flex items-center gap-3">
+                {isLoading && <Loader2 className="h-3.5 w-3.5 animate-spin text-muted-foreground" />}
+                {isLive && (
+                  <span className="text-[10px] font-semibold uppercase tracking-wider text-emerald-400 bg-emerald-400/10 px-2 py-0.5 rounded-md">
+                    Live
+                  </span>
+                )}
+                <span className="text-xs text-muted-foreground font-mono tabular-nums">
+                  {filteredData.length} pitchers
+                </span>
               </div>
             </div>
 

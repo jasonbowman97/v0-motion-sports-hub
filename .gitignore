@@ -10,4 +10,4 @@ node_modules/
 .next/
 .env*.local
 .DS_Store
-next-env.d.ts
+next-env.d.tsbuild.log

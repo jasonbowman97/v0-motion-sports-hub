@@ -22,20 +22,17 @@ function transformBattingLeaders(leaders: BattingLeader[]): Player[] {
     name: l.name,
     position: l.pos,
     team: l.team,
-    gamesPlayed: l.gamesPlayed,
-    atBats: l.atBats,
-    runs: l.runs,
-    hits: l.hits,
-    doubles: l.doubles,
-    triples: l.triples,
-    homeRuns: l.homeRuns,
-    rbi: l.rbi,
-    stolenBases: l.stolenBases,
+    abs: l.atBats,
     avg: l.avg,
-    obp: l.obp,
     slg: l.slg,
-    ops: l.ops,
-    gameLogs: [],
+    xbh: l.doubles + l.triples + l.homeRuns,
+    hr: l.homeRuns,
+    ballsLaunched: 0, // Not available from API
+    exitVelo: 0, // Not available from API
+    barrelPct: 0, // Not available from API
+    hardHitPct: 0, // Not available from API
+    flyBallPct: 0, // Not available from API
+    pulledAirPct: 0, // Not available from API
   }))
 }
 

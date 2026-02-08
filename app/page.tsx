@@ -6,20 +6,25 @@ import { FeaturesSection } from "@/components/landing/features-section"
 import { PricingSection } from "@/components/landing/pricing-section"
 import { CtaSection } from "@/components/landing/cta-section"
 import { Footer } from "@/components/landing/footer"
+import { StructuredData, generateOrganizationSchema, generateWebAppSchema } from "@/lib/seo"
 
 export default function LandingPage() {
   return (
-    <div className="min-h-screen bg-background">
-      <Navbar />
-      <main>
-        <HeroSection />
-        <SocialProof />
-        <SportsSection />
-        <FeaturesSection />
-        <PricingSection />
-        <CtaSection />
-      </main>
-      <Footer />
-    </div>
+    <>
+      <StructuredData data={generateOrganizationSchema()} />
+      <StructuredData data={generateWebAppSchema()} />
+      <div className="min-h-screen bg-background">
+        <Navbar />
+        <main>
+          <HeroSection />
+          <SocialProof />
+          <SportsSection />
+          <FeaturesSection />
+          <PricingSection />
+          <CtaSection />
+        </main>
+        <Footer />
+      </div>
+    </>
   )
 }

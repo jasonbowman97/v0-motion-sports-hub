@@ -81,8 +81,8 @@ export function HeroSection() {
                 </div>
                 <div className="flex flex-col gap-1.5">
                   <div className="grid gap-2" style={{ gridTemplateColumns: `repeat(${preview.cols.length}, 1fr)` }}>
-                    {preview.cols.map((col) => (
-                      <div key={col} className="h-2 rounded bg-secondary/80">
+                    {preview.cols.map((col, i) => (
+                      <div key={`${col}-${i}`} className="h-2 rounded bg-secondary/80">
                         <span className="sr-only">{col}</span>
                       </div>
                     ))}

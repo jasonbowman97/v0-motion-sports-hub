@@ -2,43 +2,17 @@ import Link from "next/link"
 import { BarChart3 } from "lucide-react"
 import { TrendsDashboard } from "@/components/trends/trends-dashboard"
 import { nbaTrends, nbaCategories } from "@/lib/nba-trends-data"
-import { getNBALeaders } from "@/lib/nba-api"
-import { buildTrends } from "@/lib/trends-builder"
+import { getNBAStreakTrends } from "@/lib/nba-streaks"
 
 export const metadata = {
-  title: "HeatCheck HQ - NBA Trends",
-  description: "Hot and cold streaks for NBA players across scoring, threes, rebounds, and assists.",
-}
-
-const CATEGORY_MAP: Record<string, { name: string; statLabel: string; hotPrefix: string; coldPrefix: string }> = {
-  points: { name: "Scoring", statLabel: "PPG", hotPrefix: "Averaging", coldPrefix: "Only" },
-  threePointFieldGoalsMade: { name: "Threes", statLabel: "3PM/G", hotPrefix: "Hitting", coldPrefix: "Cold at" },
-  rebounds: { name: "Rebounds", statLabel: "RPG", hotPrefix: "Grabbing", coldPrefix: "Only" },
-  assists: { name: "Assists", statLabel: "APG", hotPrefix: "Dishing", coldPrefix: "Just" },
+  title: "HeatCheck HQ - NBA Active Streaks",
+  description: "Active scoring, shooting, and all-around performance streaks for NBA players based on recent game-by-game data.",
 }
 
 async function getLiveTrends() {
   try {
-    const espnCategories = await getNBALeaders()
-    if (!espnCategories.length) return null
-    const categoryInputs = Object.entries(CATEGORY_MAP)
-      .map(([espnName, config]) => {
-        const cat = espnCategories.find((c) => c.name === espnName)
-        if (!cat) return null
-        return {
-          config,
-          leaders: cat.leaders.slice(0, 15).map((l) => ({
-            id: l.athlete.id,
-            name: l.athlete.displayName,
-            team: l.athlete.team?.abbreviation ?? "???",
-            position: l.athlete.position?.abbreviation ?? "??",
-            value: l.value,
-            displayValue: l.displayValue,
-          })),
-        }
-      })
-      .filter(Boolean) as Parameters<typeof buildTrends>[0]
-    return buildTrends(categoryInputs, "nba")
+    const trends = await getNBAStreakTrends()
+    return trends.length > 0 ? trends : null
   } catch {
     return null
   }
@@ -89,8 +63,8 @@ export default async function NBATrendsPage() {
         <TrendsDashboard
           trends={trends}
           categories={nbaCategories}
-          title="NBA Hot & Cold Trends"
-          subtitle="Players on notable streaks based on recent game performance. Spot edges in scoring, three-point shooting, rebounding, and assist consistency."
+          title="NBA Active Streaks"
+          subtitle="Players on active hot and cold streaks based on recent game-by-game performance. Identifies patterns like '7 straight games with 25+ points' or '5 straight double-doubles' to spot current form."
           isLive={isLive}
         />
       </main>

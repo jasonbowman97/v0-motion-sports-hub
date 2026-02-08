@@ -3,6 +3,8 @@ import { BarChart3 } from "lucide-react"
 import { TrendsDashboard } from "@/components/trends/trends-dashboard"
 import { nflTrends, nflCategories } from "@/lib/nfl-trends-data"
 import { getNFLStreakTrends } from "@/lib/nfl-streaks"
+import { PaywallBanner } from "@/components/paywall-banner"
+import { getSubscriptionStatus } from "@/lib/auth/actions"
 
 export const dynamic = 'force-dynamic'
 export const revalidate = 0
@@ -22,9 +24,11 @@ async function getLiveTrends() {
 }
 
 export default async function NFLTrendsPage() {
+  const userStatus = await getSubscriptionStatus()
   const liveTrends = await getLiveTrends()
   const trends = liveTrends ?? nflTrends
   const isLive = !!liveTrends
+
   return (
     <div className="min-h-screen bg-background">
       <header className="border-b border-border bg-card/50 backdrop-blur-sm sticky top-0 z-50">
@@ -62,13 +66,17 @@ export default async function NFLTrendsPage() {
       </header>
 
       <main className="mx-auto max-w-[1440px] px-6 py-8">
-        <TrendsDashboard
-          trends={trends}
-          categories={nflCategories}
-          title="NFL Active Streaks"
-          subtitle="Players on active hot and cold streaks based on recent game-by-game performance. Identifies patterns like '3 straight games with 300+ pass yards' or '5 straight games with a rushing TD' to spot current form."
-          isLive={isLive}
-        />
+        {userStatus === 'pro' ? (
+          <TrendsDashboard
+            trends={trends}
+            categories={nflCategories}
+            title="NFL Active Streaks"
+            subtitle="Players on active hot and cold streaks based on recent game-by-game performance. Identifies patterns like '3 straight games with 300+ pass yards' or '5 straight games with a rushing TD' to spot current form."
+            isLive={isLive}
+          />
+        ) : (
+          <PaywallBanner userStatus={userStatus as 'none' | 'free' | 'pro'} dashboardName="NFL Trends" />
+        )}
       </main>
     </div>
   )

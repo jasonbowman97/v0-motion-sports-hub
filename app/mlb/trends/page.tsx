@@ -3,6 +3,8 @@ import { BarChart3 } from "lucide-react"
 import { TrendsDashboard } from "@/components/trends/trends-dashboard"
 import { mlbTrends, mlbCategories } from "@/lib/mlb-trends-data"
 import { getMLBStreakTrends } from "@/lib/mlb-streaks"
+import { PaywallBanner } from "@/components/paywall-banner"
+import { getSubscriptionStatus } from "@/lib/auth/actions"
 
 export const dynamic = 'force-dynamic'
 export const revalidate = 0
@@ -22,9 +24,11 @@ async function getLiveTrends() {
 }
 
 export default async function MLBTrendsPage() {
+  const userStatus = await getSubscriptionStatus()
   const liveTrends = await getLiveTrends()
   const trends = liveTrends ?? mlbTrends
   const isLive = !!liveTrends
+
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
@@ -69,13 +73,17 @@ export default async function MLBTrendsPage() {
       </header>
 
       <main className="mx-auto max-w-[1440px] px-6 py-8">
-        <TrendsDashboard
-          trends={trends}
-          categories={mlbCategories}
-          title="MLB Active Streaks"
-          subtitle="Players on active hot and cold streaks based on recent game-by-game performance. Identifies patterns like '9 hits in last 10 games' or '5 straight quality starts' to spot current form, not just season totals."
-          isLive={isLive}
-        />
+        {userStatus === 'pro' ? (
+          <TrendsDashboard
+            trends={trends}
+            categories={mlbCategories}
+            title="MLB Active Streaks"
+            subtitle="Players on active hot and cold streaks based on recent game-by-game performance. Identifies patterns like '9 hits in last 10 games' or '5 straight quality starts' to spot current form, not just season totals."
+            isLive={isLive}
+          />
+        ) : (
+          <PaywallBanner userStatus={userStatus as 'none' | 'free' | 'pro'} dashboardName="MLB Trends" />
+        )}
       </main>
     </div>
   )

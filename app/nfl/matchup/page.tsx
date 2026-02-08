@@ -8,6 +8,8 @@ import { PassingSection, RushingSection, ReceivingSection } from "@/components/n
 import { getAllMatchups, type NFLMatchup } from "@/lib/nfl-matchup-data"
 import type { LiveMatchup } from "@/lib/nfl-api"
 import { Loader2 } from "lucide-react"
+import { PaywallBanner } from "@/components/paywall-banner"
+import { createClient } from "@/lib/supabase/client"
 
 const fetcher = (url: string) => fetch(url).then((r) => r.json())
 
@@ -108,6 +110,34 @@ interface GameOption {
 /* ------------------------------------------------------------------ */
 
 export default function NFLMatchupPage() {
+  const [userStatus, setUserStatus] = useState<'none' | 'free' | 'pro'>('none')
+
+  useEffect(() => {
+    async function checkAuth() {
+      const supabase = createClient()
+      const { data: { user } } = await supabase.auth.getUser()
+
+      if (!user) {
+        setUserStatus('none')
+        return
+      }
+
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('subscription_status')
+        .eq('id', user.id)
+        .single()
+
+      setUserStatus(profile?.subscription_status || 'free')
+    }
+
+    checkAuth()
+  }, [])
+
+  if (userStatus !== 'pro') {
+    return <PaywallBanner userStatus={userStatus} dashboardName="NFL Matchup Analysis" />
+  }
+
   const staticMatchups = getAllMatchups()
 
   // Fetch live schedule

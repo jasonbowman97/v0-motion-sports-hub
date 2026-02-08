@@ -6,6 +6,9 @@ import { getMLBStreakTrends } from "@/lib/mlb-streaks"
 import { PaywallBanner } from "@/components/paywall-banner"
 import { getSubscriptionStatus } from "@/lib/auth/actions"
 
+export const dynamic = 'force-dynamic'
+export const revalidate = 0
+
 export const metadata = {
   title: "HeatCheck HQ - MLB Active Streaks",
   description: "Active hitting and pitching streaks for MLB players. Identify hot hands and cold slumps based on recent game-by-game performance.",

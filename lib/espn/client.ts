@@ -18,7 +18,7 @@ async function espnFetch<T>(url: string): Promise<T> {
     const res = await fetch(url, {
       signal: controller.signal,
       headers: { Accept: "application/json" },
-      next: { revalidate: 86400 }, // 24-hour ISR cache at fetch level
+      next: { revalidate: 3600 }, // 1-hour ISR cache at fetch level
     })
     if (!res.ok) {
       throw new Error(`ESPN API ${res.status}: ${url}`)

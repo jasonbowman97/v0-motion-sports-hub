@@ -6,6 +6,9 @@ import { getNFLStreakTrends } from "@/lib/nfl-streaks"
 import { PaywallBanner } from "@/components/paywall-banner"
 import { getSubscriptionStatus } from "@/lib/auth/actions"
 
+export const dynamic = 'force-dynamic'
+export const revalidate = 0
+
 export const metadata = {
   title: "HeatCheck HQ - NFL Active Streaks",
   description: "Active passing, rushing, and receiving streaks for NFL players based on recent game-by-game performance.",

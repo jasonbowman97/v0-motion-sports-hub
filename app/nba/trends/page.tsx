@@ -6,6 +6,9 @@ import { getNBAStreakTrends } from "@/lib/nba-streaks"
 import { PaywallBanner } from "@/components/paywall-banner"
 import { getSubscriptionStatus } from "@/lib/auth/actions"
 
+export const dynamic = 'force-dynamic'
+export const revalidate = 0
+
 export const metadata = {
   title: "HeatCheck HQ - NBA Active Streaks",
   description: "Active scoring, shooting, and all-around performance streaks for NBA players based on recent game-by-game data.",

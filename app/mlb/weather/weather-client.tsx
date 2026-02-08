@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
+import { useState, useMemo } from "react"
 import Link from "next/link"
 import useSWR from "swr"
 import { BarChart3, ChevronLeft, ChevronRight, Calendar, Loader2 } from "lucide-react"
@@ -144,12 +145,26 @@ export function WeatherPageClient() {
   }, [])
 
   const { data, isLoading } = useSWR<{ games: APIGame[]; date: string }>("/api/mlb/schedule", fetcher, {
+
+  // Date navigation
+  const currentDate = useMemo(() => {
+    const d = new Date()
+    d.setDate(d.getDate() + dateOffset)
+    return d
+  }, [dateOffset])
+  const dateParam = currentDate.toISOString().slice(0, 10)
+  const dateLabel = currentDate.toLocaleDateString("en-US", {
+    weekday: "short",
+    month: "short",
+    day: "numeric",
+  })
+
+  const { data, isLoading } = useSWR<{ games: APIGame[]; date: string }>(`/api/mlb/schedule?date=${dateParam}`, fetcher, {
     revalidateOnFocus: false,
     dedupingInterval: 3600000, // 1 hour
   })
 
   // Transform live data or fall back to static
-  const isToday = dateOffset === 0
   const liveGames = data?.games ?? []
   const allWeatherData: StadiumWeather[] = isToday && liveGames.length > 0
     ? transformToWeatherData(liveGames)
@@ -168,6 +183,11 @@ export function WeatherPageClient() {
     month: "short",
     day: "numeric",
   })
+  const weatherData: StadiumWeather[] = liveGames.length > 0
+    ? transformToWeatherData(liveGames)
+    : stadiumWeatherData
+
+  const isLive = liveGames.length > 0
 
   return (
     <div className="min-h-screen bg-background">
@@ -222,9 +242,9 @@ export function WeatherPageClient() {
                 Live
               </span>
             )}
-            {!isLive && !isLoading && isToday && (
+            {!isLive && !isLoading && (
               <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground bg-secondary px-2 py-0.5 rounded-md">
-                No games today
+                No games scheduled
               </span>
             )}
           </div>
@@ -287,7 +307,7 @@ export function WeatherPageClient() {
         </div>
 
         {/* Table */}
-        {isLoading && isToday ? (
+        {isLoading ? (
           <div className="flex items-center justify-center py-20 gap-3 text-muted-foreground">
             <Loader2 className="h-5 w-5 animate-spin" />
             <span className="text-sm">Loading live weather data...</span>

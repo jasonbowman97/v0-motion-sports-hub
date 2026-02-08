@@ -7,7 +7,7 @@
 const BASE = "https://site.api.espn.com/apis/site/v2/sports/basketball/nba"
 
 async function espnFetch<T>(path: string): Promise<T> {
-  const res = await fetch(`${BASE}${path}`, { next: { revalidate: 86400 } })
+  const res = await fetch(`${BASE}${path}`, { next: { revalidate: 3600 } })
   if (!res.ok) throw new Error(`ESPN NBA ${res.status}: ${path}`)
   return res.json() as Promise<T>
 }
@@ -93,6 +93,48 @@ export async function getNBATeams(): Promise<NBATeamRecord[]> {
     losses: Number(t.team.record?.items?.[0]?.stats?.find((s: { name: string }) => s.name === "losses")?.value ?? 0),
     logo: t.team.logos?.[0]?.href ?? "",
   }))
+}
+
+/* ------------------------------------------------------------------ */
+/*  Team Summary (record + injuries)                                   */
+/* ------------------------------------------------------------------ */
+
+export interface NBATeamSummary {
+  record: string
+  ppg: number
+  oppPpg: number
+  injuries: { name: string; status: string; detail: string }[]
+}
+
+export async function getNBATeamSummary(teamId: string): Promise<NBATeamSummary | null> {
+  try {
+    const raw = await espnFetch<{
+      team: {
+        record?: { items?: { summary?: string; stats?: { name: string; value: number }[] }[] }
+        injuries?: { items?: { athlete: { displayName: string }; status: string; details?: { detail?: string } }[] }[]
+      }
+    }>(`/teams/${teamId}`)
+
+    const recordItem = raw.team?.record?.items?.[0]
+    const record = recordItem?.summary ?? "0-0"
+    const ppg = recordItem?.stats?.find((s: { name: string }) => s.name === "pointsFor")?.value ?? 0
+    const oppPpg = recordItem?.stats?.find((s: { name: string }) => s.name === "pointsAgainst")?.value ?? 0
+
+    const injuries: NBATeamSummary["injuries"] = []
+    for (const group of raw.team?.injuries ?? []) {
+      for (const item of group.items ?? []) {
+        injuries.push({
+          name: item.athlete?.displayName ?? "",
+          status: item.status ?? "Unknown",
+          detail: item.details?.detail ?? "",
+        })
+      }
+    }
+
+    return { record, ppg, oppPpg, injuries }
+  } catch {
+    return null
+  }
 }
 
 /* ------------------------------------------------------------------ */

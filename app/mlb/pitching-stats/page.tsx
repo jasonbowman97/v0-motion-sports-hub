@@ -21,7 +21,7 @@ function transformLeaders(leaders: PitchingLeader[]): PitcherStats[] {
     team: l.team,
     hand: (l.hand === "L" ? "L" : "R") as "L" | "R",
     era: l.era,
-    kPerGame: l.inningsPitched > 0 ? (l.strikeOuts / l.gamesPlayed) : 0,
+    kPerGame: l.inningsPitched > 0 ? (l.strikeOuts / l.inningsPitched) * 9 : 0,
     kPct: l.inningsPitched > 0 ? ((l.strikeOuts / (l.inningsPitched * 3 + l.strikeOuts + l.walks)) * 100) : 0,
     cswPct: 0, // not available from MLB Stats API
     inningsPitched: l.inningsPitched,

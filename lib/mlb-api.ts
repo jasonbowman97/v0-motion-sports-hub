@@ -4,13 +4,13 @@
  * No API key required.
  *
  * We cache at the route-handler level using Next.js
- * `export const revalidate = 86400` (once per day).
+ * `export const revalidate = 3600` (once per hour).
  */
 
 const BASE = "https://statsapi.mlb.com/api/v1"
 
 async function mlbFetch<T>(path: string): Promise<T> {
-  const res = await fetch(`${BASE}${path}`, { next: { revalidate: 86400 } })
+  const res = await fetch(`${BASE}${path}`, { next: { revalidate: 3600 } })
   if (!res.ok) throw new Error(`MLB API ${res.status}: ${path}`)
   return res.json() as Promise<T>
 }

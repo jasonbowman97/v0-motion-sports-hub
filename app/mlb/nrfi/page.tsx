@@ -119,9 +119,12 @@ export default function NrfiPage() {
   const basePitchers = isLive ? liveNrfi : nrfiPitchers
 
   // Date navigation
-  const baseDate = new Date()
-  const currentDate = new Date(baseDate)
-  currentDate.setDate(currentDate.getDate() + dateOffset)
+  const currentDate = useMemo(() => {
+    const d = new Date()
+    d.setDate(d.getDate() + dateOffset)
+    return d
+  }, [dateOffset])
+  const dateParam = currentDate.toISOString().slice(0, 10)
   const dateLabel = currentDate.toLocaleDateString("en-US", {
     weekday: "short",
     month: "short",
@@ -129,6 +132,21 @@ export default function NrfiPage() {
   })
 
   // Filter by pitcher hand (only for pro users)
+  const { data, isLoading } = useSWR<{ games: APIGame[]; date: string }>(`/api/mlb/schedule?date=${dateParam}`, fetcher, {
+    revalidateOnFocus: false,
+    dedupingInterval: 3600000,
+  })
+
+  const liveNrfi = useMemo(() => {
+    const games = data?.games ?? []
+    return games.length > 0 ? transformToNrfi(games) : []
+  }, [data])
+  const isLive = liveNrfi.length > 0
+
+  // Use live probable pitchers when available, static as fallback
+  const basePitchers = isLive ? liveNrfi : nrfiPitchers
+
+  // Filter by pitcher hand
   const filteredData = useMemo(() => {
     let data = basePitchers
 
@@ -209,7 +227,7 @@ export default function NrfiPage() {
         <div className="flex flex-col gap-1">
           <div className="flex items-center gap-3">
             <h1 className="text-2xl font-bold text-foreground text-balance">No Run First Inning</h1>
-            {isLoading && isToday && <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />}
+            {isLoading && <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />}
             {isLive && (
               <span className="text-[10px] font-semibold uppercase tracking-wider text-emerald-400 bg-emerald-400/10 px-2 py-0.5 rounded-md">
                 Live

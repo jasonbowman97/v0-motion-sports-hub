@@ -2,8 +2,7 @@ import { NextResponse } from "next/server"
 import { getNFLLeaders } from "@/lib/nfl-api"
 import { buildTrends } from "@/lib/trends-builder"
 
-export const runtime = 'nodejs'
-export const revalidate = 86400
+export const revalidate = 3600
 
 const CATEGORY_MAP: Record<string, { name: string; statLabel: string; hotPrefix: string; coldPrefix: string }> = {
   passingYards: { name: "Passing", statLabel: "Pass YDS", hotPrefix: "Throwing for", coldPrefix: "Only" },

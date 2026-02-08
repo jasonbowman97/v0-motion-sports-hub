@@ -1,9 +1,8 @@
 import { NextResponse } from "next/server"
 import { getNFLScoreboard, buildLiveMatchup } from "@/lib/nfl-api"
 
-export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
-export const revalidate = 86400
+export const revalidate = 3600
 
 export async function GET(request: Request) {
   try {

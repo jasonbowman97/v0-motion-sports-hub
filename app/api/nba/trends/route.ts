@@ -2,8 +2,7 @@ import { NextResponse } from "next/server"
 import { getNBALeaders } from "@/lib/nba-api"
 import { buildTrends } from "@/lib/trends-builder"
 
-export const runtime = 'nodejs'
-export const revalidate = 86400
+export const revalidate = 3600
 
 // Map ESPN category names to our trend categories
 const CATEGORY_MAP: Record<string, { name: string; statLabel: string; hotPrefix: string; coldPrefix: string }> = {
